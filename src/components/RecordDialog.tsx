@@ -31,7 +31,7 @@ export type Field = {
 
 // Loose by design: dialogs are used for many different record shapes.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type RecordValues = Record<string, any>;
+export type RecordValues = any;
 
 export function RecordDialog({
   open,
