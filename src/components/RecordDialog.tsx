@@ -61,7 +61,7 @@ export function RecordDialog({
   }, [open, initial]);
 
   const set = (name: string, value: string) =>
-    setValues((v) => ({ ...v, [name]: value === "" ? null : value }));
+    setValues((v: RecordValues) => ({ ...v, [name]: value === "" ? null : value }));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
