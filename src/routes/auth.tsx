@@ -40,7 +40,10 @@ function AuthPage() {
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     navigate({ to: "/dashboard", replace: true });
   };
 
@@ -53,8 +56,14 @@ function AuthPage() {
       options: { emailRedirectTo: window.location.origin, data: { full_name: fullName } },
     });
     setBusy(false);
-    if (error) return toast.error(error.message);
-    if (data.session) return navigate({ to: "/dashboard", replace: true });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    if (data.session) {
+      navigate({ to: "/dashboard", replace: true });
+      return;
+    }
     toast.success("Account created — check your email to confirm your address.");
   };
 
@@ -62,10 +71,14 @@ function AuthPage() {
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
-    if (result.error) return toast.error("Google sign-in failed. Please try again.");
+    if (result.error) {
+      toast.error("Google sign-in failed. Please try again.");
+      return;
+    }
     if (result.redirected) return;
     navigate({ to: "/dashboard", replace: true });
   };
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
