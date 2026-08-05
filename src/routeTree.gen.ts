@@ -12,9 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedAllocationsRouteImport } from './routes/_authenticated/allocations'
 import { Route as AuthenticatedBuildingsRouteImport } from './routes/_authenticated/buildings'
+import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedCampsRouteImport } from './routes/_authenticated/camps'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedHousekeepingRouteImport } from './routes/_authenticated/housekeeping'
+import { Route as AuthenticatedMaintenanceRouteImport } from './routes/_authenticated/maintenance'
 import { Route as AuthenticatedRoomsRouteImport } from './routes/_authenticated/rooms'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 
@@ -32,9 +36,20 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAllocationsRoute =
+  AuthenticatedAllocationsRouteImport.update({
+    id: '/allocations',
+    path: '/allocations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBuildingsRoute = AuthenticatedBuildingsRouteImport.update({
   id: '/buildings',
   path: '/buildings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCampsRoute = AuthenticatedCampsRouteImport.update({
@@ -47,6 +62,18 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedHousekeepingRoute =
+  AuthenticatedHousekeepingRouteImport.update({
+    id: '/housekeeping',
+    path: '/housekeeping',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMaintenanceRoute =
+  AuthenticatedMaintenanceRouteImport.update({
+    id: '/maintenance',
+    path: '/maintenance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedRoomsRoute = AuthenticatedRoomsRouteImport.update({
   id: '/rooms',
   path: '/rooms',
@@ -61,18 +88,26 @@ const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/allocations': typeof AuthenticatedAllocationsRoute
   '/buildings': typeof AuthenticatedBuildingsRoute
+  '/calendar': typeof AuthenticatedCalendarRoute
   '/camps': typeof AuthenticatedCampsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/housekeeping': typeof AuthenticatedHousekeepingRoute
+  '/maintenance': typeof AuthenticatedMaintenanceRoute
   '/rooms': typeof AuthenticatedRoomsRoute
   '/team': typeof AuthenticatedTeamRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/allocations': typeof AuthenticatedAllocationsRoute
   '/buildings': typeof AuthenticatedBuildingsRoute
+  '/calendar': typeof AuthenticatedCalendarRoute
   '/camps': typeof AuthenticatedCampsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/housekeeping': typeof AuthenticatedHousekeepingRoute
+  '/maintenance': typeof AuthenticatedMaintenanceRoute
   '/rooms': typeof AuthenticatedRoomsRoute
   '/team': typeof AuthenticatedTeamRoute
 }
@@ -81,27 +116,55 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/allocations': typeof AuthenticatedAllocationsRoute
   '/_authenticated/buildings': typeof AuthenticatedBuildingsRoute
+  '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/camps': typeof AuthenticatedCampsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/housekeeping': typeof AuthenticatedHousekeepingRoute
+  '/_authenticated/maintenance': typeof AuthenticatedMaintenanceRoute
   '/_authenticated/rooms': typeof AuthenticatedRoomsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/auth' | '/buildings' | '/camps' | '/dashboard' | '/rooms' | '/team'
+    | '/'
+    | '/auth'
+    | '/allocations'
+    | '/buildings'
+    | '/calendar'
+    | '/camps'
+    | '/dashboard'
+    | '/housekeeping'
+    | '/maintenance'
+    | '/rooms'
+    | '/team'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/auth' | '/buildings' | '/camps' | '/dashboard' | '/rooms' | '/team'
+    | '/'
+    | '/auth'
+    | '/allocations'
+    | '/buildings'
+    | '/calendar'
+    | '/camps'
+    | '/dashboard'
+    | '/housekeeping'
+    | '/maintenance'
+    | '/rooms'
+    | '/team'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/allocations'
     | '/_authenticated/buildings'
+    | '/_authenticated/calendar'
     | '/_authenticated/camps'
     | '/_authenticated/dashboard'
+    | '/_authenticated/housekeeping'
+    | '/_authenticated/maintenance'
     | '/_authenticated/rooms'
     | '/_authenticated/team'
   fileRoutesById: FileRoutesById
@@ -135,11 +198,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/allocations': {
+      id: '/_authenticated/allocations'
+      path: '/allocations'
+      fullPath: '/allocations'
+      preLoaderRoute: typeof AuthenticatedAllocationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/buildings': {
       id: '/_authenticated/buildings'
       path: '/buildings'
       fullPath: '/buildings'
       preLoaderRoute: typeof AuthenticatedBuildingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/calendar': {
+      id: '/_authenticated/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof AuthenticatedCalendarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/camps': {
@@ -154,6 +231,20 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/housekeeping': {
+      id: '/_authenticated/housekeeping'
+      path: '/housekeeping'
+      fullPath: '/housekeeping'
+      preLoaderRoute: typeof AuthenticatedHousekeepingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/maintenance': {
+      id: '/_authenticated/maintenance'
+      path: '/maintenance'
+      fullPath: '/maintenance'
+      preLoaderRoute: typeof AuthenticatedMaintenanceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/rooms': {
@@ -174,17 +265,25 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAllocationsRoute: typeof AuthenticatedAllocationsRoute
   AuthenticatedBuildingsRoute: typeof AuthenticatedBuildingsRoute
+  AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedCampsRoute: typeof AuthenticatedCampsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedHousekeepingRoute: typeof AuthenticatedHousekeepingRoute
+  AuthenticatedMaintenanceRoute: typeof AuthenticatedMaintenanceRoute
   AuthenticatedRoomsRoute: typeof AuthenticatedRoomsRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAllocationsRoute: AuthenticatedAllocationsRoute,
   AuthenticatedBuildingsRoute: AuthenticatedBuildingsRoute,
+  AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedCampsRoute: AuthenticatedCampsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedHousekeepingRoute: AuthenticatedHousekeepingRoute,
+  AuthenticatedMaintenanceRoute: AuthenticatedMaintenanceRoute,
   AuthenticatedRoomsRoute: AuthenticatedRoomsRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
 }
