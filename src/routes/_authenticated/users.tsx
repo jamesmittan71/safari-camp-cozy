@@ -31,7 +31,8 @@ const LABEL: Record<string, string> = {
 };
 
 function UsersPage() {
-  const { isAdmin } = useAuth();
+  const { role } = useAuth();
+  const isAdmin = role === "administrator";
   const qc = useQueryClient();
   const { data: profiles = [], isLoading } = useList<ProfileRow>("profiles", "*", "full_name");
   const { data: roles = [] } = useList<UserRoleRow>("user_roles", "*", "role");
