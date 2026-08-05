@@ -29,7 +29,9 @@ export type Field = {
   full?: boolean;
 };
 
-export type RecordValues = Record<string, string | number | null | undefined>;
+// Loose by design: dialogs are used for many different record shapes.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type RecordValues = Record<string, any>;
 
 export function RecordDialog({
   open,
@@ -45,12 +47,12 @@ export function RecordDialog({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   title: string;
-  description?: string;
+  description?: string | undefined;
   fields: Field[];
-  initial?: RecordValues;
+  initial?: RecordValues | undefined;
   onSubmit: (values: RecordValues) => void;
-  submitting?: boolean;
-  extra?: ReactNode;
+  submitting?: boolean | undefined;
+  extra?: ReactNode | undefined;
 }) {
   const [values, setValues] = useState<RecordValues>(initial ?? {});
 

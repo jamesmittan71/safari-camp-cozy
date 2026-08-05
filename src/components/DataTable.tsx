@@ -28,11 +28,11 @@ export function DataTable<T extends { id: string }>({
 }: {
   columns: Column<T>[];
   rows: T[];
-  loading?: boolean;
-  empty?: string;
-  onEdit?: (row: T) => void;
-  onDelete?: (row: T) => void;
-  actions?: (row: T) => ReactNode;
+  loading?: boolean | undefined;
+  empty?: string | undefined;
+  onEdit?: ((row: T) => void) | undefined;
+  onDelete?: ((row: T) => void) | undefined;
+  actions?: ((row: T) => ReactNode) | undefined;
 }) {
   const hasActions = Boolean(onEdit || onDelete || actions);
   return (
