@@ -12,10 +12,10 @@ export const Route = createFileRoute("/")({
         content:
           "Secure accommodation management for the Ten of Cups private game farm: camps, rooms, allocations, housekeeping and maintenance.",
       },
-      { property: "og:title", content: "Ten of Cups Camp Manager" },
+      { property: "og:title", content: "Ten of Cups Camp Manager — Game Farm Accommodation" },
       {
         property: "og:description",
-        content: "Manage camps, rooms, bookings and housekeeping on one private game farm platform.",
+        content: "Secure accommodation management for the Ten of Cups private game farm: camps, rooms, allocations, housekeeping and maintenance.",
       },
     ],
   }),

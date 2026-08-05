@@ -80,13 +80,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Ten of Cups Camp Manager" },
+      { title: "Ten of Cups Camp Manager — Game Farm Accommodation" },
       {
         name: "description",
-        content: "Accommodation management for the Ten of Cups private game farm.",
+        content: "Secure accommodation management for the Ten of Cups private game farm: camps, rooms, allocations, housekeeping and maintenance.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:title", content: "Ten of Cups Camp Manager — Game Farm Accommodation" },
+      { name: "twitter:title", content: "Ten of Cups Camp Manager — Game Farm Accommodation" },
+      { property: "og:description", content: "Secure accommodation management for the Ten of Cups private game farm: camps, rooms, allocations, housekeeping and maintenance." },
+      { name: "twitter:description", content: "Secure accommodation management for the Ten of Cups private game farm: camps, rooms, allocations, housekeeping and maintenance." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/2f0ca34a-7fdc-48a5-aac7-d9f84ee0e330/id-preview-ec1a9e8b--5080b3d8-49fa-4829-8a71-b2593b4fd530.lovable.app-1785931864566.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/2f0ca34a-7fdc-48a5-aac7-d9f84ee0e330/id-preview-ec1a9e8b--5080b3d8-49fa-4829-8a71-b2593b4fd530.lovable.app-1785931864566.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
