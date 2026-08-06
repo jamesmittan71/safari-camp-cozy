@@ -51,13 +51,19 @@ export function DataTable<T extends { id: string }>({
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={columns.length + 1} className="py-10 text-center text-muted-foreground">
+              <TableCell
+                colSpan={columns.length + 1}
+                className="py-10 text-center text-muted-foreground"
+              >
                 Loading…
               </TableCell>
             </TableRow>
           ) : rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={columns.length + 1} className="py-10 text-center text-muted-foreground">
+              <TableCell
+                colSpan={columns.length + 1}
+                className="py-10 text-center text-muted-foreground"
+              >
                 {empty}
               </TableCell>
             </TableRow>
@@ -68,7 +74,7 @@ export function DataTable<T extends { id: string }>({
                   <TableCell key={c.key} className={c.className}>
                     {c.render
                       ? c.render(row)
-                      : ((row as Record<string, unknown>)[c.key] as ReactNode) ?? "—"}
+                      : (((row as Record<string, unknown>)[c.key] as ReactNode) ?? "—")}
                   </TableCell>
                 ))}
                 {hasActions ? (
@@ -76,7 +82,12 @@ export function DataTable<T extends { id: string }>({
                     <div className="flex items-center justify-end gap-1">
                       {actions?.(row)}
                       {onEdit ? (
-                        <Button size="icon" variant="ghost" aria-label="Edit" onClick={() => onEdit(row)}>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          aria-label="Edit"
+                          onClick={() => onEdit(row)}
+                        >
                           <Pencil className="size-4" />
                         </Button>
                       ) : null}

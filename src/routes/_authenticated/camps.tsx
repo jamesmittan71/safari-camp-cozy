@@ -14,9 +14,15 @@ export const Route = createFileRoute("/_authenticated/camps")({
   head: () => ({
     meta: [
       { title: "Camps — Ten of Cups Camp Manager" },
-      { name: "description", content: "Create and manage camps and their room types across the game farm." },
+      {
+        name: "description",
+        content: "Create and manage camps and their room types across the game farm.",
+      },
       { property: "og:title", content: "Camps — Ten of Cups Camp Manager" },
-      { property: "og:description", content: "Camp register for the Ten of Cups private game farm." },
+      {
+        property: "og:description",
+        content: "Camp register for the Ten of Cups private game farm.",
+      },
     ],
   }),
   component: CampsPage,
@@ -49,7 +55,12 @@ function CampsPage() {
           subtitle="Each camp holds its own buildings, room types and housekeeping."
           action={
             canManage ? (
-              <Button onClick={() => { setEditing(undefined); setCampOpen(true); }}>
+              <Button
+                onClick={() => {
+                  setEditing(undefined);
+                  setCampOpen(true);
+                }}
+              >
                 <Plus className="size-4" /> New camp
               </Button>
             ) : null
@@ -66,7 +77,14 @@ function CampsPage() {
             { key: "description", label: "Description" },
             { key: "status", label: "Status", render: (r) => <StatusBadge value={r.status} /> },
           ]}
-          onEdit={canManage ? (r) => { setEditing({ ...r } as unknown as RecordValues); setCampOpen(true); } : undefined}
+          onEdit={
+            canManage
+              ? (r) => {
+                  setEditing({ ...r } as unknown as RecordValues);
+                  setCampOpen(true);
+                }
+              : undefined
+          }
           onDelete={canManage ? (r) => deleteCamp.mutate(r.id) : undefined}
         />
       </div>
@@ -77,7 +95,13 @@ function CampsPage() {
           subtitle="Reusable room categories per camp."
           action={
             canManage ? (
-              <Button variant="outline" onClick={() => { setEditingType(undefined); setTypeOpen(true); }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEditingType(undefined);
+                  setTypeOpen(true);
+                }}
+              >
                 <Plus className="size-4" /> New room type
               </Button>
             ) : null
@@ -91,7 +115,14 @@ function CampsPage() {
             { key: "camp", label: "Camp", render: (r) => r.camps?.name ?? "—" },
             { key: "description", label: "Description" },
           ]}
-          onEdit={canManage ? (r) => { setEditingType({ ...r } as unknown as RecordValues); setTypeOpen(true); } : undefined}
+          onEdit={
+            canManage
+              ? (r) => {
+                  setEditingType({ ...r } as unknown as RecordValues);
+                  setTypeOpen(true);
+                }
+              : undefined
+          }
           onDelete={canManage ? (r) => deleteType.mutate(r.id) : undefined}
         />
       </div>

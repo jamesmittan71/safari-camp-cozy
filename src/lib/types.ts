@@ -43,11 +43,36 @@ export type TeamMemberRow = {
   name: string;
   surname: string;
   department: string | null;
+  position: string | null;
+  gender: string | null;
   phone: string | null;
   email: string | null;
   vehicle_registration: string | null;
   emergency_contact: string | null;
+  employment_status: string;
+  date_joined: string | null;
   notes: string | null;
+};
+
+export type StaffAllocationHistoryRow = {
+  id: string;
+  team_member_id: string;
+  from_room_id: string | null;
+  from_bed: string | null;
+  to_room_id: string | null;
+  to_bed: string | null;
+  allocation_date: string;
+  reason: string | null;
+  created_by: string | null;
+  created_at: string;
+  from_room?: {
+    room_number: string;
+    buildings?: { name: string; camps?: { name: string } | null } | null;
+  } | null;
+  to_room?: {
+    room_number: string;
+    buildings?: { name: string; camps?: { name: string } | null } | null;
+  } | null;
 };
 
 export type AllocationRow = {
@@ -62,32 +87,75 @@ export type AllocationRow = {
   department: string | null;
   comments: string | null;
   status: string;
-  rooms?: { room_number: string; buildings?: { name: string; camps?: { name: string } | null } | null } | null;
+  created_at: string;
+  updated_at: string | null;
+  created_by: string | null;
+  rooms?: {
+    room_number: string;
+    buildings?: { name: string; camps?: { name: string } | null } | null;
+  } | null;
 };
 
 export type HousekeepingRow = {
   id: string;
   room_id: string;
   status: string;
+  priority: string;
   assigned_to: string | null;
+  date_assigned: string | null;
   started_at: string | null;
   completed_at: string | null;
   notes: string | null;
+  inspection_notes: string | null;
+  inspected_by: string | null;
   created_at: string;
-  rooms?: { room_number: string; buildings?: { name: string } | null } | null;
+  rooms?: {
+    room_number: string;
+    buildings?: { name: string; camps?: { name: string } | null } | null;
+  } | null;
   team_members?: { name: string; surname: string } | null;
+};
+
+export type HousekeepingHistoryRow = {
+  id: string;
+  task_id: string;
+  from_status: string | null;
+  to_status: string;
+  changed_by: string | null;
+  notes: string | null;
+  created_at: string;
 };
 
 export type MaintenanceRow = {
   id: string;
   room_id: string;
+  work_order_number: string | null;
+  category: string;
   reported_by: string | null;
+  assigned_to: string | null;
   priority: string;
   description: string;
   status: string;
+  target_date: string | null;
   completed_date: string | null;
+  completion_notes: string | null;
   created_at: string;
-  rooms?: { room_number: string; buildings?: { name: string } | null } | null;
+  rooms?: {
+    room_number: string;
+    buildings?: { name: string; camps?: { name: string } | null } | null;
+  } | null;
+  reporter?: { name: string; surname: string } | null;
+  technician?: { name: string; surname: string } | null;
+};
+
+export type MaintenanceHistoryRow = {
+  id: string;
+  report_id: string;
+  from_status: string | null;
+  to_status: string;
+  changed_by: string | null;
+  notes: string | null;
+  created_at: string;
 };
 
 export type ProfileRow = {
