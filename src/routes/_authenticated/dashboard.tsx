@@ -1,18 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  BedDouble,
-  Building2,
-  CalendarCheck,
-  CalendarX,
-  ClipboardList,
-  Sparkles,
-  Tent,
-  Wrench,
-} from "lucide-react";
+import { BedDouble, Building2, ClipboardList, Sparkles, Tent, Wrench } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/hooks/useAuth";
 import { isActiveOn, today, useList } from "@/lib/data";
 import type { AllocationRow, HousekeepingRow, MaintenanceRow, RoomRow } from "@/lib/types";
 
@@ -110,6 +100,9 @@ function Dashboard() {
     .filter((issue) => issue.status !== "completed" && issue.status !== "cancelled")
     .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))
     .slice(0, 5);
+  const activeMaintenanceIssues = maintenanceIssues.filter(
+    (issue) => issue.status !== "completed" && issue.status !== "cancelled",
+  ).length;
 
   const todayChanges = [
     ...allocations
@@ -188,7 +181,7 @@ function Dashboard() {
         <Stat
           icon={Wrench}
           label="Maintenance Issues"
-          value={maintenanceQueue.length}
+          value={activeMaintenanceIssues}
           tone="text-status-maintenance"
         />
       </div>
