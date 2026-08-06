@@ -28,16 +28,26 @@ export const Route = createFileRoute("/_authenticated/reports")({
 });
 
 const TABS = [
-  { key: "occupancy", label: "Occupancy" },
+  { key: "occupancy", label: "Operational" },
   { key: "guests", label: "Current Guests" },
   { key: "available", label: "Available Rooms" },
   { key: "history", label: "Room History" },
   { key: "cleaning", label: "Cleaning" },
   { key: "maintenance", label: "Maintenance" },
-];
+] as const;
+
+type TabKey = (typeof TABS)[number]["key"];
+
+type ActivityRow = {
+  id: string;
+  activity: string;
+  source: string;
+  detail: string;
+  when: string;
+};
 
 function ReportsPage() {
-  const [tab, setTab] = useState("occupancy");
+  const [tab, setTab] = useState<TabKey>("occupancy");
   const day = today();
 
   const { data: rooms = [] } = useList<RoomRow>(
@@ -52,11 +62,11 @@ function ReportsPage() {
   );
   const { data: cleaning = [] } = useList<HousekeepingRow>(
     "housekeeping_tasks",
-    "*, rooms(room_number, buildings(name)), team_members(name, surname)",
+    "*, rooms(room_number, buildings(name, camps(name))), team_members(name, surname)",
   );
   const { data: maintenance = [] } = useList<MaintenanceRow>(
     "maintenance_reports",
-    "*, rooms(room_number, buildings(name))",
+    "*, rooms(room_number, buildings(name, camps(name)))",
   );
 
   const active = useMemo(() => allocations.filter((a) => isActiveOn(a, day)), [allocations, day]);
@@ -93,6 +103,75 @@ function ReportsPage() {
         .length,
     [maintenance],
   );
+
+  const cleaningTouchedToday = useMemo(
+    () =>
+      cleaning.filter(
+        (task) =>
+          task.created_at.slice(0, 10) === day ||
+          task.started_at?.slice(0, 10) === day ||
+          task.completed_at?.slice(0, 10) === day,
+      ),
+    [cleaning, day],
+  );
+
+  const cleaningCompletedToday = useMemo(
+    () => cleaning.filter((task) => task.completed_at?.slice(0, 10) === day).length,
+    [cleaning, day],
+  );
+
+  const housekeepingCompletionPct =
+    cleaningTouchedToday.length > 0
+      ? Math.round((cleaningCompletedToday / cleaningTouchedToday.length) * 100)
+      : 0;
+
+  const todaysActivity = useMemo<ActivityRow[]>(() => {
+    const allocationsToday = allocations
+      .filter(
+        (row) =>
+          (row as { created_at?: string }).created_at?.slice(0, 10) === day ||
+          row.arrival_date === day ||
+          row.departure_date === day,
+      )
+      .map((row) => ({
+        id: `alloc-${row.id}`,
+        activity: "Allocation",
+        source: `Tent ${row.rooms?.room_number ?? "—"}`,
+        detail: [row.bed_a_name, row.bed_b_name].filter(Boolean).join(" · ") || "No staff assigned",
+        when: (row as { created_at?: string }).created_at ?? row.arrival_date,
+      }));
+
+    const cleaningToday = cleaning
+      .filter(
+        (row) =>
+          row.created_at.slice(0, 10) === day ||
+          row.started_at?.slice(0, 10) === day ||
+          row.completed_at?.slice(0, 10) === day,
+      )
+      .map((row) => ({
+        id: `clean-${row.id}`,
+        activity: "Cleaning",
+        source: `Tent ${row.rooms?.room_number ?? "—"}`,
+        detail: row.status.replace(/_/g, " "),
+        when: row.completed_at ?? row.started_at ?? row.created_at,
+      }));
+
+    const maintenanceToday = maintenance
+      .filter(
+        (row) => row.created_at.slice(0, 10) === day || row.completed_date?.slice(0, 10) === day,
+      )
+      .map((row) => ({
+        id: `maint-${row.id}`,
+        activity: "Maintenance",
+        source: `Tent ${row.rooms?.room_number ?? "—"}`,
+        detail: row.status.replace(/_/g, " "),
+        when: row.completed_date ?? row.created_at,
+      }));
+
+    return [...allocationsToday, ...cleaningToday, ...maintenanceToday]
+      .sort((a, b) => sortNewest(a.when, b.when))
+      .slice(0, 20);
+  }, [allocations, cleaning, maintenance, day]);
 
   const exportRows = useMemo<Record<string, string>[]>(() => {
     if (tab === "occupancy") {
@@ -182,7 +261,7 @@ function ReportsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `occupancy-reports-${tab}-${day}.csv`;
+    link.download = `operational-reports-${tab}-${day}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -191,7 +270,7 @@ function ReportsPage() {
     <div>
       <PageHeader
         title="Reports"
-        subtitle="Live operational reporting across every camp."
+        subtitle="Operational reporting across camps, blocks, tents, housekeeping and maintenance."
         action={
           <Button onClick={exportCsv} disabled={!exportRows.length}>
             Export CSV
@@ -214,13 +293,15 @@ function ReportsPage() {
 
       {tab === "occupancy" && (
         <div className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-6">
-            <Stat label="Occupancy rate" value={`${rate}%`} />
-            <Stat label="Rooms occupied" value={String(occupiedIds.size)} />
-            <Stat label="Total rooms" value={String(rooms.length)} />
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <Stat label="Occupied beds" value={String(occupiedBeds)} />
             <Stat label="Available beds" value={String(availableBeds)} />
             <Stat label="Dirty tents" value={String(dirtyTentCount)} />
             <Stat label="Maintenance" value={String(openMaintenanceCount)} />
+            <Stat label="Occupancy" value={`${rate}%`} />
+            <Stat label="Housekeeping completion" value={`${housekeepingCompletionPct}%`} />
+            <Stat label="Completed cleaning today" value={String(cleaningCompletedToday)} />
+            <Stat label="Today's activity" value={String(todaysActivity.length)} />
           </div>
 
           <div className="grid gap-4 xl:grid-cols-2">
@@ -263,6 +344,24 @@ function ReportsPage() {
               </CardContent>
             </Card>
           </div>
+
+          <Card className="shadow-lodge">
+            <CardHeader>
+              <CardTitle className="font-display text-xl">Today's Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DataTable<ActivityRow>
+                rows={todaysActivity}
+                empty="No activity recorded today."
+                columns={[
+                  { key: "activity", label: "Activity" },
+                  { key: "source", label: "Source" },
+                  { key: "detail", label: "Details" },
+                  { key: "when", label: "When", render: (row) => dt(row.when) },
+                ]}
+              />
+            </CardContent>
+          </Card>
         </div>
       )}
 
@@ -429,4 +528,8 @@ function getOccupancyCount(allocation: AllocationRow | undefined) {
   if (explicitBeds > 0) return explicitBeds;
 
   return [allocation.bed_a_name, allocation.bed_b_name].filter(Boolean).length;
+}
+
+function sortNewest(a?: string | null, b?: string | null) {
+  return (b ?? "").localeCompare(a ?? "");
 }
