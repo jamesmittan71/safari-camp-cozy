@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import {
   BedDouble,
   Building2,
@@ -18,6 +18,9 @@ import { OccupancyCalendar } from "@/components/OccupancyCalendar";
 import type { AllocationRow, RoomRow } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
+  beforeLoad: () => {
+    throw redirect({ to: "/accommodation-board", replace: true });
+  },
   head: () => ({
     meta: [
       { title: "Dashboard — Ten of Cups Camp Manager" },

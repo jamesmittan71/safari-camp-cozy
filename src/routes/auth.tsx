@@ -13,9 +13,15 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in — Ten of Cups Camp Manager" },
-      { name: "description", content: "Sign in to the Ten of Cups Camp Manager to view camp accommodation data." },
+      {
+        name: "description",
+        content: "Sign in to the Ten of Cups Camp Manager to view camp accommodation data.",
+      },
       { property: "og:title", content: "Sign in — Ten of Cups Camp Manager" },
-      { property: "og:description", content: "Staff access to the Ten of Cups game farm accommodation system." },
+      {
+        property: "og:description",
+        content: "Staff access to the Ten of Cups game farm accommodation system.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -31,7 +37,7 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+      if (data.session) navigate({ to: "/accommodation-mmodation-board", replace: true });
     });
   }, [navigate]);
 
@@ -61,7 +67,7 @@ function AuthPage() {
       return;
     }
     if (data.session) {
-      navigate({ to: "/dashboard", replace: true });
+      navigate({ to: "/accommodation-board", replace: true });
       return;
     }
     toast.success("Account created — check your email to confirm your address.");
@@ -79,14 +85,21 @@ function AuthPage() {
     navigate({ to: "/dashboard", replace: true });
   };
 
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-6 flex flex-col items-center text-center">
-          <img src={logo} alt="Ten of Cups Camp Manager" width={72} height={72} className="size-18" />
+          <img
+            src={logo}
+            alt="Ten of Cups Camp Manager"
+            width={72}
+            height={72}
+            className="size-18"
+          />
           <h1 className="mt-3 font-display text-3xl text-primary">Ten of Cups</h1>
-          <p className="text-[11px] tracking-[0.24em] uppercase text-muted-foreground">Camp Manager</p>
+          <p className="text-[11px] tracking-[0.24em] uppercase text-muted-foreground">
+            Camp Manager
+          </p>
         </div>
 
         <div className="surface-lodge p-6">
@@ -99,12 +112,28 @@ function AuthPage() {
             <TabsContent value="signin">
               <form className="space-y-4 pt-4" onSubmit={signIn}>
                 <div>
-                  <Label htmlFor="email" className="mb-1.5 block">Email</Label>
-                  <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <Label htmlFor="email" className="mb-1.5 block">
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="password" className="mb-1.5 block">Password</Label>
-                  <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <Label htmlFor="password" className="mb-1.5 block">
+                    Password
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
                 </div>
                 <Button type="submit" className="w-full" disabled={busy}>
                   {busy ? "Signing in…" : "Sign in"}
@@ -115,16 +144,40 @@ function AuthPage() {
             <TabsContent value="signup">
               <form className="space-y-4 pt-4" onSubmit={signUp}>
                 <div>
-                  <Label htmlFor="name" className="mb-1.5 block">Full name</Label>
-                  <Input id="name" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                  <Label htmlFor="name" className="mb-1.5 block">
+                    Full name
+                  </Label>
+                  <Input
+                    id="name"
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="email2" className="mb-1.5 block">Email</Label>
-                  <Input id="email2" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <Label htmlFor="email2" className="mb-1.5 block">
+                    Email
+                  </Label>
+                  <Input
+                    id="email2"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="password2" className="mb-1.5 block">Password</Label>
-                  <Input id="password2" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <Label htmlFor="password2" className="mb-1.5 block">
+                    Password
+                  </Label>
+                  <Input
+                    id="password2"
+                    type="password"
+                    required
+                    minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
                 </div>
                 <Button type="submit" className="w-full" disabled={busy}>
                   {busy ? "Creating…" : "Create account"}
