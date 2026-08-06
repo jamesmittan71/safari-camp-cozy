@@ -402,7 +402,7 @@ function HousekeepingPage() {
             required: true,
             options: rooms.map((r) => ({
               value: r.id,
-              label: `${r.rooms?.buildings?.camps?.name ?? r.buildings?.camps?.name ?? ""} › ${r.buildings?.name ?? ""} › ${r.room_number}`,
+              label: `${r.buildings?.camps?.name ?? ""} › ${r.buildings?.name ?? ""} › ${r.room_number}`,
             })),
           },
           { name: "status", label: "Cleaning Status", type: "select", options: HK_STATUS },

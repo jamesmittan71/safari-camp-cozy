@@ -87,6 +87,9 @@ export type AllocationRow = {
   department: string | null;
   comments: string | null;
   status: string;
+  created_at: string;
+  updated_at: string | null;
+  created_by: string | null;
   rooms?: {
     room_number: string;
     buildings?: { name: string; camps?: { name: string } | null } | null;

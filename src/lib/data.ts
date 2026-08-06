@@ -50,7 +50,7 @@ export function useList<T = Record<string, any>>(
       if (error) throw new Error(error.message);
       return (data ?? []) as T[];
     },
-    refetchInterval: options?.refetchInterval,
+    ...(options?.refetchInterval !== undefined && { refetchInterval: options.refetchInterval }),
   });
 }
 

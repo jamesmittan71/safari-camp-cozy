@@ -204,7 +204,7 @@ function MaintenancePage() {
     const next = NEXT_STATUS[r.status];
     if (!next) return;
     const patch: Record<string, unknown> = { id: r.id, status: next };
-    if (next === "completed") patch.completed_date = todayStr;
+    if (next === "completed") patch["completed_date"] = todayStr;
     save.mutate(patch);
   };
 
