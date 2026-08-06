@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedAccommodationBoardRouteImport } from './routes/_authenticated/accommodation-board'
 import { Route as AuthenticatedAllocationsRouteImport } from './routes/_authenticated/allocations'
 import { Route as AuthenticatedBuildingsRouteImport } from './routes/_authenticated/buildings'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
@@ -38,6 +39,12 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAccommodationBoardRoute =
+  AuthenticatedAccommodationBoardRouteImport.update({
+    id: '/accommodation-board',
+    path: '/accommodation-board',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAllocationsRoute =
   AuthenticatedAllocationsRouteImport.update({
     id: '/allocations',
@@ -100,6 +107,7 @@ const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/accommodation-board': typeof AuthenticatedAccommodationBoardRoute
   '/allocations': typeof AuthenticatedAllocationsRoute
   '/buildings': typeof AuthenticatedBuildingsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
@@ -115,6 +123,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/accommodation-board': typeof AuthenticatedAccommodationBoardRoute
   '/allocations': typeof AuthenticatedAllocationsRoute
   '/buildings': typeof AuthenticatedBuildingsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
@@ -132,6 +141,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/accommodation-board': typeof AuthenticatedAccommodationBoardRoute
   '/_authenticated/allocations': typeof AuthenticatedAllocationsRoute
   '/_authenticated/buildings': typeof AuthenticatedBuildingsRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/accommodation-board'
     | '/allocations'
     | '/buildings'
     | '/calendar'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/accommodation-board'
     | '/allocations'
     | '/buildings'
     | '/calendar'
@@ -180,6 +192,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/accommodation-board'
     | '/_authenticated/allocations'
     | '/_authenticated/buildings'
     | '/_authenticated/calendar'
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/accommodation-board': {
+      id: '/_authenticated/accommodation-board'
+      path: '/accommodation-board'
+      fullPath: '/accommodation-board'
+      preLoaderRoute: typeof AuthenticatedAccommodationBoardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/allocations': {
       id: '/_authenticated/allocations'
@@ -303,6 +323,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAccommodationBoardRoute: typeof AuthenticatedAccommodationBoardRoute
   AuthenticatedAllocationsRoute: typeof AuthenticatedAllocationsRoute
   AuthenticatedBuildingsRoute: typeof AuthenticatedBuildingsRoute
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
@@ -317,6 +338,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAccommodationBoardRoute: AuthenticatedAccommodationBoardRoute,
   AuthenticatedAllocationsRoute: AuthenticatedAllocationsRoute,
   AuthenticatedBuildingsRoute: AuthenticatedBuildingsRoute,
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
@@ -341,3 +363,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

@@ -25,15 +25,16 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/accommodation-board", label: "Accommodation Board", icon: Tent },
   { to: "/camps", label: "Camps", icon: Tent },
-  { to: "/buildings", label: "Buildings", icon: Building2 },
-  { to: "/rooms", label: "Rooms", icon: BedDouble },
+  { to: "/buildings", label: "Blocks", icon: Building2 },
+  { to: "/rooms", label: "Tents", icon: BedDouble },
   { to: "/allocations", label: "Allocations", icon: ClipboardList },
   { to: "/calendar", label: "Calendar", icon: CalendarDays },
   { to: "/housekeeping", label: "Housekeeping", icon: Sparkles },
   { to: "/maintenance", label: "Maintenance", icon: Wrench },
-  { to: "/team", label: "Team Members", icon: Users },
-  { to: "/reports", label: "Reports", icon: FileBarChart },
+  { to: "/team", label: "Staff", icon: Users },
+  { to: "/reports", label: "Occupancy Reports", icon: FileBarChart },
   { to: "/users", label: "User Access", icon: Users },
 ] as const;
 
