@@ -81,6 +81,9 @@ function AccommodationBoardPage() {
   const [allocationDialogOpen, setAllocationDialogOpen] = useState(false);
   const [allocationAction, setAllocationAction] = useState<AllocationAction>(null);
   const [allocationBed, setAllocationBed] = useState<BedKey>("bed_a");
+  const [filter, setFilter] = useState<"all" | "occupied" | "needs-cleaning" | "maintenance">(
+    "all",
+  );
 
   const activeAllocations = allocations.filter((a) => isActiveOn(a, day));
   const activeByRoom = new Map(activeAllocations.map((a) => [a.room_id, a]));
@@ -91,12 +94,21 @@ function AccommodationBoardPage() {
       .map((report) => [report.room_id, report]),
   );
 
+  const occupiedBedCount = rooms.reduce((total, room) => {
+    const current = activeByRoom.get(room.id);
+    return total + getOccupancyCount(current);
+  }, 0);
+  const totalBedCapacity = rooms.reduce((total, room) => total + getBedCount(room), 0);
+  const occupiedTentCount = rooms.filter(
+    (room) => getOccupancyCount(activeByRoom.get(room.id)) > 0,
+  ).length;
+
   const summary = [
     {
       label: "Occupancy",
-      value: `${rooms.length ? Math.round((activeAllocations.length / rooms.length) * 100) : 0}%`,
+      value: `${rooms.length && totalBedCapacity ? Math.round((occupiedBedCount / totalBedCapacity) * 100) : 0}%`,
     },
-    { label: "Occupied tents", value: `${activeAllocations.length}` },
+    { label: "Occupied tents", value: `${occupiedTentCount}` },
     { label: "Cleaning", value: `${cleaning.filter((task) => task.status !== "ready").length}` },
     {
       label: "Maintenance",
@@ -104,10 +116,58 @@ function AccommodationBoardPage() {
     },
   ];
 
+  const attentionRooms = orderedRooms
+    .filter((room) => {
+      const current = activeByRoom.get(room.id);
+      const cleaningTask = cleaningByRoom.get(room.id);
+      const maintenanceIssue = maintenanceByRoom.get(room.id);
+      const occupancy = getOccupancyCount(current);
+      const bedCount = getBedCount(room);
+
+      return (
+        Boolean(maintenanceIssue) ||
+        cleaningTask?.status === "to_clean" ||
+        cleaningTask?.status === "in_progress" ||
+        occupancy >= bedCount ||
+        occupancy > 0
+      );
+    })
+    .slice(0, 3);
+
   const staffOptions = members.map((member) => ({
     value: member.id,
     label: `${member.name} ${member.surname}`,
   }));
+
+  const orderedRooms = [...rooms].sort((left, right) => {
+    const leftState = getRoomPriority(
+      left,
+      activeByRoom.get(left.id),
+      cleaningByRoom.get(left.id),
+      maintenanceByRoom.get(left.id),
+    );
+    const rightState = getRoomPriority(
+      right,
+      activeByRoom.get(right.id),
+      cleaningByRoom.get(right.id),
+      maintenanceByRoom.get(right.id),
+    );
+
+    return leftState - rightState || left.room_number.localeCompare(right.room_number);
+  });
+
+  const visibleRooms = orderedRooms.filter((room) => {
+    const current = activeByRoom.get(room.id);
+    const cleaningTask = cleaningByRoom.get(room.id);
+    const maintenanceIssue = maintenanceByRoom.get(room.id);
+    const occupancy = getOccupancyCount(current);
+
+    if (filter === "occupied") return occupancy > 0;
+    if (filter === "needs-cleaning")
+      return cleaningTask?.status === "to_clean" || cleaningTask?.status === "in_progress";
+    if (filter === "maintenance") return Boolean(maintenanceIssue);
+    return true;
+  });
 
   const openRoomActions = (room: RoomRow) => {
     setSelectedRoom(room);
@@ -239,16 +299,23 @@ function AccommodationBoardPage() {
       ? `${members.find((member) => member.id === chosenStaff)?.name} ${members.find((member) => member.id === chosenStaff)?.surname}`
       : null;
 
+    const nextBedA = selectedBed === "bed_a" ? (chosenStaff ?? null) : (current?.bed_a ?? null);
+    const nextBedB = selectedBed === "bed_b" ? (chosenStaff ?? null) : (current?.bed_b ?? null);
+    const nextBedAName =
+      selectedBed === "bed_a" ? (staffName ?? null) : (current?.bed_a_name ?? null);
+    const nextBedBName =
+      selectedBed === "bed_b" ? (staffName ?? null) : (current?.bed_b_name ?? null);
+
     saveAllocation.mutate(
       {
         id: current?.id,
         room_id: selectedRoom.id,
         arrival_date: current?.arrival_date ?? day,
         departure_date: current?.departure_date ?? tomorrow,
-        bed_a: selectedBed === "bed_a" ? (chosenStaff ?? null) : (current?.bed_a ?? null),
-        bed_b: selectedBed === "bed_b" ? (chosenStaff ?? null) : (current?.bed_b ?? null),
-        bed_a_name: selectedBed === "bed_a" ? (staffName ?? null) : (current?.bed_a_name ?? null),
-        bed_b_name: selectedBed === "bed_b" ? (staffName ?? null) : (current?.bed_b_name ?? null),
+        bed_a: nextBedA,
+        bed_b: nextBedB,
+        bed_a_name: nextBedAName,
+        bed_b_name: nextBedBName,
         department: current?.department ?? null,
         comments: current?.comments ?? null,
         status: current?.status ?? "checked_in",
@@ -256,6 +323,17 @@ function AccommodationBoardPage() {
       { onSuccess: () => closeDialogs() },
     );
   };
+
+  const selectedAllocation = selectedRoom ? activeByRoom.get(selectedRoom.id) : undefined;
+  const selectedCleaning = selectedRoom ? cleaningByRoom.get(selectedRoom.id) : undefined;
+  const selectedMaintenance = selectedRoom ? maintenanceByRoom.get(selectedRoom.id) : undefined;
+  const selectedOccupancy = getOccupancyCount(selectedAllocation);
+  const selectedBedCount = selectedRoom ? getBedCount(selectedRoom) : 0;
+  const hasActiveAllocation = Boolean(selectedAllocation);
+  const isCleanReady = selectedCleaning?.status === "ready";
+  const hasOpenMaintenance = Boolean(
+    selectedMaintenance && ["open", "in_progress"].includes(selectedMaintenance.status),
+  );
 
   return (
     <div className="space-y-6">
@@ -275,98 +353,180 @@ function AccommodationBoardPage() {
         ))}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {rooms.map((room) => {
-          const current = activeByRoom.get(room.id);
-          const cleaningTask = cleaningByRoom.get(room.id);
-          const maintenanceIssue = maintenanceByRoom.get(room.id);
-          const occupancy = getOccupancyCount(current);
-          const bedCount = getBedCount(room);
-          const assignedStaff = getAssignedStaff(current, members);
-          const cardTone = getCardTone(room, occupancy, cleaningTask, maintenanceIssue);
-
-          return (
-            <Card
-              key={room.id}
-              className={cn(
-                "shadow-lodge cursor-pointer transition-transform hover:-translate-y-0.5",
-                cardTone,
-              )}
-              onClick={() => (canOperate ? openRoomActions(room) : undefined)}
-              onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  if (canOperate) openRoomActions(room);
-                }
-              }}
-              role="button"
-              tabIndex={0}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <CardTitle className="text-base">{room.room_number}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {room.buildings?.name ?? "Unassigned block"} ·{" "}
-                      {room.buildings?.camps?.name ?? "Unassigned camp"}
-                    </p>
-                  </div>
-                  <StatusBadge value={room.status} />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">{getTentType(room)}</Badge>
-                  <Badge variant="outline">
-                    {bedCount} bed{bedCount === 1 ? "" : "s"}
-                  </Badge>
-                </div>
-
-                <div className="grid gap-2">
-                  <InfoRow label="Camp" value={room.buildings?.camps?.name ?? "Unassigned"} />
-                  <InfoRow label="Block" value={room.buildings?.name ?? "Unassigned"} />
-                  <InfoRow label="Tent Type" value={getTentType(room)} />
-                  <InfoRow label="Beds" value={`${bedCount}`} />
-                  <InfoRow label="Current Occupancy" value={`${occupancy}/${bedCount}`} />
-                  <InfoRow
-                    label="Staff Assigned"
-                    value={assignedStaff.length ? assignedStaff.join(" · ") : "No staff assigned"}
-                  />
-                  <InfoRow
-                    label="Cleaning Status"
-                    value={cleaningTask ? cleaningTask.status.replace(/_/g, " ") : "Ready"}
-                  />
-                  <InfoRow
-                    label="Maintenance Status"
-                    value={maintenanceIssue ? maintenanceIssue.status.replace(/_/g, " ") : "Clear"}
-                  />
-                </div>
-
-                {isTwinTent(room) ? (
-                  <div className="space-y-2">
-                    <div className="rounded-lg border border-border p-2">
-                      <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                        Bed A
-                      </p>
-                      <p className="mt-1 font-medium">
-                        {getBedLabel(current, "bed_a", members) || "Empty"}
-                      </p>
-                    </div>
-                    <div className="rounded-lg border border-border p-2">
-                      <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                        Bed B
-                      </p>
-                      <p className="mt-1 font-medium">
-                        {getBedLabel(current, "bed_b", members) || "Empty"}
-                      </p>
-                    </div>
-                  </div>
-                ) : null}
-              </CardContent>
-            </Card>
-          );
-        })}
+      <div className="flex flex-wrap gap-2">
+        {[
+          { value: "all", label: "All tents" },
+          { value: "occupied", label: "Occupied" },
+          { value: "needs-cleaning", label: "Needs cleaning" },
+          { value: "maintenance", label: "Maintenance" },
+        ].map((option) => (
+          <Button
+            key={option.value}
+            variant={filter === option.value ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter(option.value as typeof filter)}
+          >
+            {option.label}
+          </Button>
+        ))}
       </div>
+
+      {attentionRooms.length ? (
+        <Card className="shadow-lodge">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-medium">Needs attention</p>
+                <p className="text-sm text-muted-foreground">
+                  The tents that need the most immediate follow-up today.
+                </p>
+              </div>
+              <Badge variant="outline">Priority view</Badge>
+            </div>
+            <div className="mt-4 grid gap-2 md:grid-cols-3">
+              {attentionRooms.map((room) => {
+                const current = activeByRoom.get(room.id);
+                const cleaningTask = cleaningByRoom.get(room.id);
+                const maintenanceIssue = maintenanceByRoom.get(room.id);
+                const occupancy = getOccupancyCount(current);
+
+                return (
+                  <div
+                    key={room.id}
+                    className="rounded-lg border border-border bg-background/50 p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium">{room.room_number}</p>
+                      <Badge variant="outline">{occupancy > 0 ? "Occupied" : "Open"}</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {room.buildings?.name ?? "Unassigned block"}
+                    </p>
+                    <p className="mt-2 text-sm">
+                      Occupancy {occupancy}/{getBedCount(room)} ·{" "}
+                      {maintenanceIssue ? "Maintenance" : "Ready"}
+                    </p>
+                    {cleaningTask ? (
+                      <p className="text-sm text-muted-foreground">
+                        Cleaning: {cleaningTask.status.replace(/_/g, " ")}
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {visibleRooms.length ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {visibleRooms.map((room) => {
+            const current = activeByRoom.get(room.id);
+            const cleaningTask = cleaningByRoom.get(room.id);
+            const maintenanceIssue = maintenanceByRoom.get(room.id);
+            const occupancy = getOccupancyCount(current);
+            const bedCount = getBedCount(room);
+            const assignedStaff = getAssignedStaff(current, members);
+            const cardTone = getCardTone(room, occupancy, cleaningTask, maintenanceIssue);
+
+            return (
+              <Card
+                key={room.id}
+                className={cn(
+                  "shadow-lodge cursor-pointer transition-transform hover:-translate-y-0.5",
+                  cardTone,
+                )}
+                onClick={() => (canOperate ? openRoomActions(room) : undefined)}
+                onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    if (canOperate) openRoomActions(room);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <CardTitle className="text-base">{room.room_number}</CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        {room.buildings?.name ?? "Unassigned block"} ·{" "}
+                        {room.buildings?.camps?.name ?? "Unassigned camp"}
+                      </p>
+                    </div>
+                    <StatusBadge value={room.status} />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="secondary">{getTentType(room)}</Badge>
+                    <Badge variant="outline">
+                      {bedCount} bed{bedCount === 1 ? "" : "s"}
+                    </Badge>
+                    <Badge variant={occupancy > 0 ? "default" : "secondary"}>
+                      {occupancy > 0 ? "Occupied" : "Available"}
+                    </Badge>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <InfoRow label="Camp" value={room.buildings?.camps?.name ?? "Unassigned"} />
+                    <InfoRow label="Block" value={room.buildings?.name ?? "Unassigned"} />
+                    <InfoRow label="Tent Type" value={getTentType(room)} />
+                    <InfoRow label="Beds" value={`${bedCount}`} />
+                    <InfoRow label="Current Occupancy" value={`${occupancy}/${bedCount}`} />
+                    <InfoRow
+                      label="Staff Assigned"
+                      value={assignedStaff.length ? assignedStaff.join(" · ") : "No staff assigned"}
+                    />
+                    <InfoRow
+                      label="Cleaning Status"
+                      value={cleaningTask ? cleaningTask.status.replace(/_/g, " ") : "Ready"}
+                    />
+                    <InfoRow
+                      label="Maintenance Status"
+                      value={
+                        maintenanceIssue ? maintenanceIssue.status.replace(/_/g, " ") : "Clear"
+                      }
+                    />
+                  </div>
+
+                  {isTwinTent(room) ? (
+                    <div className="space-y-2">
+                      <div className="rounded-lg border border-border p-2">
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                          Bed A
+                        </p>
+                        <p className="mt-1 font-medium">
+                          {getBedLabel(current, "bed_a", members) || "Empty"}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-border p-2">
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                          Bed B
+                        </p>
+                        <p className="mt-1 font-medium">
+                          {getBedLabel(current, "bed_b", members) || "Empty"}
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        <Card className="shadow-lodge">
+          <CardContent className="pt-6">
+            <p className="font-medium">No tents match this view.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Try switching the filter to see the full board again.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       <Dialog
         open={actionOpen}
@@ -381,6 +541,18 @@ function AccommodationBoardPage() {
               Manage staff, cleaning and maintenance for this tent without leaving the board.
             </DialogDescription>
           </DialogHeader>
+          {selectedRoom ? (
+            <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                Current tent status
+              </p>
+              <p className="mt-1 font-medium">
+                Occupancy {selectedOccupancy}/{selectedBedCount} ·{" "}
+                {selectedCleaning ? selectedCleaning.status.replace(/_/g, " ") : "Ready"} ·{" "}
+                {selectedMaintenance ? selectedMaintenance.status.replace(/_/g, " ") : "Clear"}
+              </p>
+            </div>
+          ) : null}
           <div className="grid gap-2 sm:grid-cols-2">
             <Button
               variant="outline"
@@ -401,14 +573,14 @@ function AccommodationBoardPage() {
             <Button
               variant="outline"
               onClick={() => selectedRoom && handleRemoveStaff(selectedRoom)}
-              disabled={!canOperate || !selectedRoom}
+              disabled={!canOperate || !selectedRoom || !hasActiveAllocation}
             >
               Remove Staff
             </Button>
             <Button
               variant="outline"
               onClick={() => selectedRoom && handleMarkClean(selectedRoom)}
-              disabled={!canOperate || !selectedRoom}
+              disabled={!canOperate || !selectedRoom || isCleanReady}
             >
               Mark Clean
             </Button>
@@ -422,14 +594,14 @@ function AccommodationBoardPage() {
             <Button
               variant="outline"
               onClick={() => selectedRoom && handleReportMaintenance(selectedRoom)}
-              disabled={!canOperate || !selectedRoom}
+              disabled={!canOperate || !selectedRoom || hasOpenMaintenance}
             >
               Report Maintenance
             </Button>
             <Button
               variant="outline"
               onClick={() => selectedRoom && handleCompleteMaintenance(selectedRoom)}
-              disabled={!canOperate || !selectedRoom}
+              disabled={!canOperate || !selectedRoom || !hasOpenMaintenance}
             >
               Complete Maintenance
             </Button>
@@ -454,7 +626,7 @@ function AccommodationBoardPage() {
           }
         }}
         title={allocationAction === "move" ? "Move staff" : "Allocate staff"}
-        description="Assign a staff member to a bed on this tent."
+        description="Assign or reassign a staff member to a bed on this tent."
         initial={{
           bed: allocationBed,
           staff_id: selectedRoom
@@ -513,12 +685,12 @@ function getBedCount(room: RoomRow) {
 }
 
 function getOccupancyCount(allocation: AllocationRow | undefined) {
-  return [
-    allocation?.bed_a,
-    allocation?.bed_b,
-    allocation?.bed_a_name,
-    allocation?.bed_b_name,
-  ].filter(Boolean).length;
+  if (!allocation) return 0;
+
+  const explicitBeds = [allocation.bed_a, allocation.bed_b].filter(Boolean).length;
+  if (explicitBeds > 0) return explicitBeds;
+
+  return [allocation.bed_a_name, allocation.bed_b_name].filter(Boolean).length;
 }
 
 function getAssignedStaff(allocation: AllocationRow | undefined, members: TeamMemberRow[]) {
