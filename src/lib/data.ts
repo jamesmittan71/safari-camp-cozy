@@ -11,6 +11,7 @@ export type Tbl =
   | "allocations"
   | "allocation_history"
   | "housekeeping_tasks"
+  | "housekeeping_history"
   | "maintenance_reports"
   | "profiles"
   | "user_roles";
@@ -109,10 +110,18 @@ export const ROOM_STATUS_LABEL: Record<string, string> = Object.fromEntries(
 );
 
 export const HK_STATUS = [
-  { value: "to_clean", label: "To Clean" },
-  { value: "in_progress", label: "Cleaning Started" },
-  { value: "complete", label: "Cleaning Complete" },
-  { value: "ready", label: "Ready for Occupancy" },
+  { value: "dirty", label: "Dirty" },
+  { value: "cleaning_scheduled", label: "Cleaning Scheduled" },
+  { value: "cleaning_in_progress", label: "Cleaning In Progress" },
+  { value: "inspection_required", label: "Inspection Required" },
+  { value: "clean", label: "Clean" },
+  { value: "out_of_service", label: "Out of Service" },
+];
+
+export const HK_PRIORITY = [
+  { value: "low", label: "Low" },
+  { value: "normal", label: "Normal" },
+  { value: "high", label: "High" },
 ];
 
 export const PRIORITIES = [

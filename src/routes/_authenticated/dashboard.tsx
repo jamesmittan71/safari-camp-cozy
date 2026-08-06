@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { isActiveOn, today, useList, useSave } from "@/lib/data";
 import { OccupancyCalendar } from "@/components/OccupancyCalendar";
-import type { AllocationRow, RoomRow } from "@/lib/types";
+import type { AllocationRow, HousekeepingRow, RoomRow } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -69,14 +69,26 @@ function Dashboard() {
   );
   const saveRoom = useSave("rooms", "Room");
   const saveAllocation = useSave("allocations", "Allocation");
+  const { data: hkTasks = [] } = useList<HousekeepingRow>(
+    "housekeeping_tasks",
+    "room_id, status, date_completed",
+  );
 
   const count = (status: string) => rooms.filter((r) => r.status === status).length;
+  const hkCount = (status: string) => hkTasks.filter((t) => t.status === status).length;
   const arrivals = allocations.filter((a) => a.arrival_date === day && a.status !== "cancelled");
   const departures = allocations.filter(
     (a) => a.departure_date === day && a.status !== "cancelled",
   );
   const occupiedNow = allocations.filter((a) => isActiveOn(a, day));
   const cleaning = rooms.filter((r) => r.status === "cleaning_required");
+  const overdueHk = hkTasks.filter(
+    (t) =>
+      t.date_assigned !== null &&
+      t.date_assigned < day &&
+      t.status !== "clean" &&
+      t.status !== "out_of_service",
+  );
 
   return (
     <div>
@@ -108,9 +120,27 @@ function Dashboard() {
         />
         <Stat
           icon={Sparkles}
-          label="Awaiting Cleaning"
-          value={count("cleaning_required")}
+          label="Dirty Tents"
+          value={hkCount("dirty")}
           tone="text-status-cleaning"
+        />
+        <Stat
+          icon={Sparkles}
+          label="Cleaning In Progress"
+          value={hkCount("cleaning_in_progress")}
+          tone="text-status-occupied"
+        />
+        <Stat
+          icon={Sparkles}
+          label="Inspection Required"
+          value={hkCount("inspection_required")}
+          tone="text-status-maintenance"
+        />
+        <Stat
+          icon={Sparkles}
+          label="Overdue Cleaning"
+          value={overdueHk.length}
+          tone="text-destructive"
         />
         <Stat
           icon={Wrench}

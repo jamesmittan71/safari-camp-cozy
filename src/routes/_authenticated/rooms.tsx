@@ -98,7 +98,9 @@ function computeStatus(
     housekeeping.some(
       (task) =>
         task.room_id === room.id &&
-        ["cleaning_required", "to_clean", "in_progress"].includes(task.status),
+        ["dirty", "cleaning_scheduled", "cleaning_in_progress", "inspection_required"].includes(
+          task.status,
+        ),
     );
   if (hasHousekeeping) return "dirty";
 

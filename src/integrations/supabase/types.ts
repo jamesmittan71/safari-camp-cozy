@@ -161,14 +161,63 @@ export type Database = {
         };
         Relationships: [];
       };
+      housekeeping_history: {
+        Row: {
+          id: string;
+          task_id: string | null;
+          room_id: string | null;
+          previous_status: string | null;
+          new_status: string;
+          cleaner_id: string | null;
+          cleaner_name: string | null;
+          notes: string | null;
+          performed_by: string | null;
+          performed_by_name: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          task_id?: string | null;
+          room_id?: string | null;
+          previous_status?: string | null;
+          new_status: string;
+          cleaner_id?: string | null;
+          cleaner_name?: string | null;
+          notes?: string | null;
+          performed_by?: string | null;
+          performed_by_name?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          task_id?: string | null;
+          room_id?: string | null;
+          previous_status?: string | null;
+          new_status?: string;
+          cleaner_id?: string | null;
+          cleaner_name?: string | null;
+          notes?: string | null;
+          performed_by?: string | null;
+          performed_by_name?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       housekeeping_tasks: {
         Row: {
           assigned_to: string | null;
+          cleaning_notes: string | null;
           completed_at: string | null;
           created_at: string;
+          date_assigned: string | null;
+          date_completed: string | null;
+          date_started: string | null;
           deleted_at: string | null;
           id: string;
+          inspected_by: string | null;
+          inspection_notes: string | null;
           notes: string | null;
+          priority: string;
           room_id: string;
           started_at: string | null;
           status: string;
@@ -176,11 +225,18 @@ export type Database = {
         };
         Insert: {
           assigned_to?: string | null;
+          cleaning_notes?: string | null;
           completed_at?: string | null;
           created_at?: string;
+          date_assigned?: string | null;
+          date_completed?: string | null;
+          date_started?: string | null;
           deleted_at?: string | null;
           id?: string;
+          inspected_by?: string | null;
+          inspection_notes?: string | null;
           notes?: string | null;
+          priority?: string;
           room_id: string;
           started_at?: string | null;
           status?: string;
@@ -188,11 +244,18 @@ export type Database = {
         };
         Update: {
           assigned_to?: string | null;
+          cleaning_notes?: string | null;
           completed_at?: string | null;
           created_at?: string;
+          date_assigned?: string | null;
+          date_completed?: string | null;
+          date_started?: string | null;
           deleted_at?: string | null;
           id?: string;
+          inspected_by?: string | null;
+          inspection_notes?: string | null;
           notes?: string | null;
+          priority?: string;
           room_id?: string;
           started_at?: string | null;
           status?: string;
