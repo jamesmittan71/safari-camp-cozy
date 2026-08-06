@@ -14,9 +14,15 @@ export const Route = createFileRoute("/_authenticated/maintenance")({
   head: () => ({
     meta: [
       { title: "Maintenance — Ten of Cups Camp Manager" },
-      { name: "description", content: "Report and track room faults by priority through to completion." },
+      {
+        name: "description",
+        content: "Report and track room faults by priority through to completion.",
+      },
       { property: "og:title", content: "Maintenance — Ten of Cups Camp Manager" },
-      { property: "og:description", content: "Fault reporting and repair tracking for camp rooms." },
+      {
+        property: "og:description",
+        content: "Fault reporting and repair tracking for camp rooms.",
+      },
     ],
   }),
   component: MaintenancePage,
@@ -43,7 +49,12 @@ function MaintenancePage() {
         subtitle="Faults reported against rooms, tracked to completion."
         action={
           canOperate ? (
-            <Button onClick={() => { setEditing(undefined); setOpen(true); }}>
+            <Button
+              onClick={() => {
+                setEditing(undefined);
+                setOpen(true);
+              }}
+            >
               <Plus className="size-4" /> Report fault
             </Button>
           ) : null
@@ -83,7 +94,14 @@ function MaintenancePage() {
                 )
             : undefined
         }
-        onEdit={canOperate ? (r) => { setEditing({ ...r } as RecordValues); setOpen(true); } : undefined}
+        onEdit={
+          canOperate
+            ? (r) => {
+                setEditing({ ...r } as RecordValues);
+                setOpen(true);
+              }
+            : undefined
+        }
         onDelete={canOperate ? (r) => remove.mutate(r.id) : undefined}
       />
 
@@ -99,7 +117,10 @@ function MaintenancePage() {
             label: "Room",
             type: "select",
             required: true,
-            options: rooms.map((r) => ({ value: r.id, label: `${r.room_number} — ${r.buildings?.name ?? ""}` })),
+            options: rooms.map((r) => ({
+              value: r.id,
+              label: `${r.room_number} — ${r.buildings?.name ?? ""}`,
+            })),
           },
           {
             name: "reported_by",
@@ -110,7 +131,13 @@ function MaintenancePage() {
           { name: "priority", label: "Priority", type: "select", options: PRIORITIES },
           { name: "status", label: "Status", type: "select", options: MAINT_STATUS },
           { name: "completed_date", label: "Completed date", type: "date" },
-          { name: "description", label: "Description", type: "textarea", required: true, full: true },
+          {
+            name: "description",
+            label: "Description",
+            type: "textarea",
+            required: true,
+            full: true,
+          },
         ]}
         onSubmit={(values: RecordValues) => {
           save.mutate(

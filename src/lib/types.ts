@@ -62,20 +62,65 @@ export type AllocationRow = {
   department: string | null;
   comments: string | null;
   status: string;
-  rooms?: { room_number: string; buildings?: { name: string; camps?: { name: string } | null } | null } | null;
+  rooms?: {
+    room_number: string;
+    buildings?: { name: string; camps?: { name: string } | null } | null;
+  } | null;
+};
+
+export type AllocationHistoryRow = {
+  id: string;
+  allocation_id: string | null;
+  staff_id: string | null;
+  staff_name: string | null;
+  previous_room_id: string | null;
+  previous_room_number: string | null;
+  previous_bed: string | null;
+  new_room_id: string | null;
+  new_room_number: string | null;
+  new_bed: string | null;
+  action: string;
+  reason: string | null;
+  performed_by: string | null;
+  performed_by_name: string | null;
+  created_at: string;
 };
 
 export type HousekeepingRow = {
   id: string;
   room_id: string;
   status: string;
+  priority: string;
   assigned_to: string | null;
   started_at: string | null;
   completed_at: string | null;
+  date_assigned: string | null;
+  date_started: string | null;
+  date_completed: string | null;
   notes: string | null;
+  cleaning_notes: string | null;
+  inspection_notes: string | null;
+  inspected_by: string | null;
   created_at: string;
-  rooms?: { room_number: string; buildings?: { name: string } | null } | null;
+  rooms?: {
+    room_number: string;
+    buildings?: { name: string; camps?: { name: string } | null } | null;
+  } | null;
   team_members?: { name: string; surname: string } | null;
+};
+
+export type HousekeepingHistoryRow = {
+  id: string;
+  task_id: string | null;
+  room_id: string | null;
+  previous_status: string | null;
+  new_status: string;
+  cleaner_id: string | null;
+  cleaner_name: string | null;
+  notes: string | null;
+  performed_by: string | null;
+  performed_by_name: string | null;
+  created_at: string;
 };
 
 export type MaintenanceRow = {
