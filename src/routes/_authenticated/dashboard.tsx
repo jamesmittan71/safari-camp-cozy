@@ -1,15 +1,6 @@
 import { useMemo } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import {
-  BedDouble,
-  Building2,
-  BrushCleaning,
-  ClipboardList,
-  Hammer,
-  Tent,
-  TrendingUp,
-  Users,
-} from "lucide-react";
+import { BedDouble, Building2, ClipboardList, Hammer, Tent, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -127,6 +118,9 @@ function Dashboard() {
   const maintenanceCompletedTodayCount = maintenance.filter(
     (item) => item.completed_date?.slice(0, 10) === day,
   ).length;
+  const housekeepingQueueCount = housekeeping.filter(
+    (task) => task.status === "to_clean" || task.status === "in_progress",
+  ).length;
 
   const newestAllocations = useMemo<ActivityItem[]>(
     () =>
@@ -218,33 +212,21 @@ function Dashboard() {
         subtitle="Manager home screen for accommodation, housekeeping and maintenance."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-        <StatCard icon={Tent} label="Camps" value={camps.length} />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+        <StatCard icon={Tent} label="Camp" value={camps.length} />
         <StatCard icon={Building2} label="Blocks" value={blocks.length} />
         <StatCard icon={Tent} label="Tents" value={tents.length} />
-        <StatCard icon={BedDouble} label="Total Beds" value={totalBeds} />
+        <StatCard icon={BedDouble} label="Beds" value={totalBeds} />
+        <StatCard icon={TrendingUp} label="Occupancy" value={occupancyPct} suffix="%" />
         <StatCard
-          icon={Users}
-          label="Occupied Beds"
-          value={occupiedBeds}
-          tone="text-status-occupied"
-        />
-        <StatCard
-          icon={BedDouble}
-          label="Available Beds"
-          value={availableBeds}
-          tone="text-status-available"
-        />
-        <StatCard icon={TrendingUp} label="Occupancy %" value={occupancyPct} suffix="%" />
-        <StatCard
-          icon={BrushCleaning}
-          label="Dirty Tents"
-          value={dirtyTentIds.size}
+          icon={ClipboardList}
+          label="Housekeeping"
+          value={housekeepingQueueCount}
           tone="text-status-cleaning"
         />
         <StatCard
           icon={Hammer}
-          label="Maintenance Items"
+          label="Maintenance"
           value={activeMaintenance.length}
           tone="text-status-maintenance"
         />
