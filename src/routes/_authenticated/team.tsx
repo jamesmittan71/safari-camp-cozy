@@ -14,9 +14,15 @@ export const Route = createFileRoute("/_authenticated/team")({
   head: () => ({
     meta: [
       { title: "Team Members — Ten of Cups Camp Manager" },
-      { name: "description", content: "Staff register with departments, contact details and emergency contacts." },
+      {
+        name: "description",
+        content: "Staff register with departments, contact details and emergency contacts.",
+      },
       { property: "og:title", content: "Team Members — Ten of Cups Camp Manager" },
-      { property: "og:description", content: "Employee directory for camp accommodation allocation." },
+      {
+        property: "og:description",
+        content: "Employee directory for camp accommodation allocation.",
+      },
     ],
   }),
   component: TeamPage,
@@ -40,12 +46,17 @@ function TeamPage() {
   return (
     <div>
       <PageHeader
-        title="Team Members"
-        subtitle="People who can be allocated to beds across the camps."
+        title="Staff"
+        subtitle="People who can be assigned to tents and allocated across the camps."
         action={
           canManage ? (
-            <Button onClick={() => { setEditing(undefined); setOpen(true); }}>
-              <Plus className="size-4" /> New team member
+            <Button
+              onClick={() => {
+                setEditing(undefined);
+                setOpen(true);
+              }}
+            >
+              <Plus className="size-4" /> New staff member
             </Button>
           ) : null
         }
@@ -59,7 +70,7 @@ function TeamPage() {
       <DataTable<TeamMemberRow>
         loading={isLoading}
         rows={filtered}
-        empty="No team members captured yet."
+        empty="No staff members captured yet."
         columns={[
           { key: "employee_number", label: "Emp. no." },
           { key: "name", label: "Name", render: (r) => `${r.name} ${r.surname}` },
@@ -70,14 +81,21 @@ function TeamPage() {
           { key: "emergency_contact", label: "Emergency contact" },
           { key: "notes", label: "Notes" },
         ]}
-        onEdit={canManage ? (r) => { setEditing({ ...r } as unknown as RecordValues); setOpen(true); } : undefined}
+        onEdit={
+          canManage
+            ? (r) => {
+                setEditing({ ...r } as unknown as RecordValues);
+                setOpen(true);
+              }
+            : undefined
+        }
         onDelete={canManage ? (r) => remove.mutate(r.id) : undefined}
       />
 
       <RecordDialog
         open={open}
         onOpenChange={setOpen}
-        title={editing?.id ? "Edit team member" : "New team member"}
+        title={editing?.id ? "Edit staff member" : "New staff member"}
         initial={editing}
         submitting={save.isPending}
         fields={[

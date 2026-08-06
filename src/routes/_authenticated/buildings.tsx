@@ -14,7 +14,10 @@ export const Route = createFileRoute("/_authenticated/buildings")({
   head: () => ({
     meta: [
       { title: "Buildings — Ten of Cups Camp Manager" },
-      { name: "description", content: "Manage the buildings that make up each camp on the game farm." },
+      {
+        name: "description",
+        content: "Manage the buildings that make up each camp on the game farm.",
+      },
       { property: "og:title", content: "Buildings — Ten of Cups Camp Manager" },
       { property: "og:description", content: "Building register per camp with status tracking." },
     ],
@@ -34,12 +37,17 @@ function BuildingsPage() {
   return (
     <div>
       <PageHeader
-        title="Buildings"
-        subtitle="Every building belongs to a camp and holds its rooms."
+        title="Blocks"
+        subtitle="Every block belongs to a camp and holds the tents within it."
         action={
           canManage ? (
-            <Button onClick={() => { setEditing(undefined); setOpen(true); }}>
-              <Plus className="size-4" /> New building
+            <Button
+              onClick={() => {
+                setEditing(undefined);
+                setOpen(true);
+              }}
+            >
+              <Plus className="size-4" /> New block
             </Button>
           ) : null
         }
@@ -47,25 +55,32 @@ function BuildingsPage() {
       <DataTable<BuildingRow>
         loading={isLoading}
         rows={buildings}
-        empty="No buildings yet."
+        empty="No blocks yet."
         columns={[
-          { key: "name", label: "Building" },
+          { key: "name", label: "Block" },
           { key: "camp", label: "Camp", render: (r) => r.camps?.name ?? "—" },
           { key: "description", label: "Description" },
           { key: "status", label: "Status", render: (r) => <StatusBadge value={r.status} /> },
         ]}
-        onEdit={canManage ? (r) => { setEditing({ ...r } as unknown as RecordValues); setOpen(true); } : undefined}
+        onEdit={
+          canManage
+            ? (r) => {
+                setEditing({ ...r } as unknown as RecordValues);
+                setOpen(true);
+              }
+            : undefined
+        }
         onDelete={canManage ? (r) => remove.mutate(r.id) : undefined}
       />
 
       <RecordDialog
         open={open}
         onOpenChange={setOpen}
-        title={editing?.id ? "Edit building" : "New building"}
+        title={editing?.id ? "Edit block" : "New block"}
         initial={editing}
         submitting={save.isPending}
         fields={[
-          { name: "name", label: "Building name", required: true },
+          { name: "name", label: "Block name", required: true },
           {
             name: "camp_id",
             label: "Camp",

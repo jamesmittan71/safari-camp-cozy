@@ -15,7 +15,10 @@ export const Route = createFileRoute("/_authenticated/rooms")({
   head: () => ({
     meta: [
       { title: "Rooms — Ten of Cups Camp Manager" },
-      { name: "description", content: "Room register with bed configuration, occupancy limits and live status." },
+      {
+        name: "description",
+        content: "Room register with bed configuration, occupancy limits and live status.",
+      },
       { property: "og:title", content: "Rooms — Ten of Cups Camp Manager" },
       { property: "og:description", content: "Track every room's status across the reserve." },
     ],
@@ -38,19 +41,25 @@ function RoomsPage() {
   const [search, setSearch] = useState("");
 
   const filtered = rooms.filter((r) => {
-    const hay = `${r.room_number} ${r.buildings?.name ?? ""} ${r.buildings?.camps?.name ?? ""} ${r.status}`.toLowerCase();
+    const hay =
+      `${r.room_number} ${r.buildings?.name ?? ""} ${r.buildings?.camps?.name ?? ""} ${r.status}`.toLowerCase();
     return hay.includes(search.toLowerCase());
   });
 
   return (
     <div>
       <PageHeader
-        title="Rooms"
-        subtitle="Bed configuration, occupancy and current status for every room."
+        title="Tents"
+        subtitle="Tent types, capacity and current status for each sleeping space."
         action={
           canManage ? (
-            <Button onClick={() => { setEditing(undefined); setOpen(true); }}>
-              <Plus className="size-4" /> New room
+            <Button
+              onClick={() => {
+                setEditing(undefined);
+                setOpen(true);
+              }}
+            >
+              <Plus className="size-4" /> New tent
             </Button>
           ) : null
         }
@@ -64,39 +73,58 @@ function RoomsPage() {
       <DataTable<RoomRow>
         loading={isLoading}
         rows={filtered}
-        empty="No rooms yet."
+        empty="No tents yet."
         columns={[
-          { key: "room_number", label: "Room" },
-          { key: "building", label: "Building", render: (r) => r.buildings?.name ?? "—" },
+          { key: "room_number", label: "Tent" },
+          { key: "building", label: "Block", render: (r) => r.buildings?.name ?? "—" },
           { key: "camp", label: "Camp", render: (r) => r.buildings?.camps?.name ?? "—" },
-          { key: "type", label: "Type", render: (r) => r.room_types?.name ?? "—" },
-          { key: "bed_configuration", label: "Beds", render: (r) => (r.bed_configuration === "double" ? "Double" : "Twin") },
+          { key: "type", label: "Tent type", render: (r) => r.room_types?.name ?? "—" },
+          {
+            key: "bed_configuration",
+            label: "Layout",
+            render: (r) =>
+              r.bed_configuration === "double"
+                ? "Double"
+                : r.bed_configuration === "single"
+                  ? "Single"
+                  : "Twin",
+          },
           { key: "max_occupancy", label: "Max" },
           { key: "status", label: "Status", render: (r) => <StatusBadge value={r.status} /> },
           { key: "maintenance_notes", label: "Maintenance notes" },
         ]}
-        onEdit={canOperate ? (r) => { setEditing({ ...r } as unknown as RecordValues); setOpen(true); } : undefined}
+        onEdit={
+          canOperate
+            ? (r) => {
+                setEditing({ ...r } as unknown as RecordValues);
+                setOpen(true);
+              }
+            : undefined
+        }
         onDelete={canManage ? (r) => remove.mutate(r.id) : undefined}
       />
 
       <RecordDialog
         open={open}
         onOpenChange={setOpen}
-        title={editing?.id ? `Edit room ${editing.room_number ?? ""}` : "New room"}
+        title={editing?.id ? `Edit tent ${editing.room_number ?? ""}` : "New tent"}
         initial={editing}
         submitting={save.isPending}
         fields={[
           { name: "room_number", label: "Room number", required: true },
           {
             name: "building_id",
-            label: "Building",
+            label: "Block",
             type: "select",
             required: true,
-            options: buildings.map((b) => ({ value: b.id, label: `${b.name} — ${b.camps?.name ?? ""}` })),
+            options: buildings.map((b) => ({
+              value: b.id,
+              label: `${b.name} — ${b.camps?.name ?? ""}`,
+            })),
           },
           {
             name: "room_type_id",
-            label: "Room type",
+            label: "Tent type",
             type: "select",
             options: roomTypes.map((t) => ({ value: t.id, label: t.name })),
           },
@@ -105,6 +133,7 @@ function RoomsPage() {
             label: "Bed configuration",
             type: "select",
             options: [
+              { value: "single", label: "Single" },
               { value: "twin", label: "Twin" },
               { value: "double", label: "Double" },
             ],
