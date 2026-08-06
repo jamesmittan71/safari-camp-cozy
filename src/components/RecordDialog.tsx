@@ -110,7 +110,15 @@ export function RecordDialog({
               ) : (
                 <Input
                   id={f.name}
-                  type={f.type === "number" ? "number" : f.type === "date" ? "date" : f.type === "email" ? "email" : "text"}
+                  type={
+                    f.type === "number"
+                      ? "number"
+                      : f.type === "date"
+                        ? "date"
+                        : f.type === "email"
+                          ? "email"
+                          : "text"
+                  }
                   required={f.required}
                   placeholder={f.placeholder}
                   value={(values[f.name] as string) ?? ""}

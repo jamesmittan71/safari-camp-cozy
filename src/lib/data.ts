@@ -9,6 +9,7 @@ export type Tbl =
   | "rooms"
   | "team_members"
   | "allocations"
+  | "allocation_history"
   | "housekeeping_tasks"
   | "maintenance_reports"
   | "profiles"
@@ -28,11 +29,7 @@ const SOFT_DELETE_TABLES: Tbl[] = [
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const db = supabase as any;
 
-export function useList<T = Record<string, any>>(
-  table: Tbl,
-  select = "*",
-  order = "created_at",
-) {
+export function useList<T = Record<string, any>>(table: Tbl, select = "*", order = "created_at") {
   return useQuery({
     queryKey: [table, select],
     queryFn: async () => {
@@ -68,6 +65,20 @@ export function useSave(table: Tbl, label = "Record") {
   });
 }
 
+export function useInsert(table: Tbl, label = "Record") {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: async (values: Record<string, any>) => {
+      const { error } = await db.from(table).insert(values);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message || `${label} insert failed`),
+  });
+}
+
 export function useSoftDelete(table: Tbl, label = "Record") {
   const invalidate = useInvalidate();
   return useMutation({
@@ -81,7 +92,6 @@ export function useSoftDelete(table: Tbl, label = "Record") {
     onSuccess: () => {
       invalidate();
       toast.success(`${label} deleted`);
-
     },
     onError: (e: Error) => toast.error(e.message),
   });

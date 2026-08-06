@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [fullName, setFullName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const userEmail = session?.user?.email ?? null;
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
@@ -58,12 +60,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const order: AppRole[] = ["administrator", "manager", "housekeeping", "read_only"];
       const found = (roles ?? []).map((r) => r.role as AppRole);
       setRole(order.find((r) => found.includes(r)) ?? "read_only");
-      setFullName(profile?.full_name ?? session?.user?.email ?? null);
+      setFullName(profile?.full_name ?? userEmail);
     })();
     return () => {
       active = false;
     };
-  }, [session?.user?.id]);
+  }, [session?.user?.id, userEmail]);
 
   const value: AuthValue = {
     user: session?.user ?? null,

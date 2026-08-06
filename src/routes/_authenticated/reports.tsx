@@ -6,18 +6,17 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isActiveOn, today, useList } from "@/lib/data";
-import type {
-  AllocationRow,
-  HousekeepingRow,
-  MaintenanceRow,
-  RoomRow,
-} from "@/lib/types";
+import type { AllocationRow, HousekeepingRow, MaintenanceRow, RoomRow } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
     meta: [
       { title: "Reports — Ten of Cups Camp Manager" },
-      { name: "description", content: "Occupancy, room history, cleaning, maintenance, current guests and availability reports." },
+      {
+        name: "description",
+        content:
+          "Occupancy, room history, cleaning, maintenance, current guests and availability reports.",
+      },
       { property: "og:title", content: "Reports — Ten of Cups Camp Manager" },
       { property: "og:description", content: "Operational reporting across the game farm camps." },
     ],
@@ -38,7 +37,11 @@ function ReportsPage() {
   const [tab, setTab] = useState("occupancy");
   const day = today();
 
-  const { data: rooms = [] } = useList<RoomRow>("rooms", "*, buildings(name, camps(name))", "room_number");
+  const { data: rooms = [] } = useList<RoomRow>(
+    "rooms",
+    "*, buildings(name, camps(name))",
+    "room_number",
+  );
   const { data: allocations = [] } = useList<AllocationRow>(
     "allocations",
     "*, rooms(room_number, buildings(name, camps(name)))",
@@ -158,7 +161,8 @@ function ReportsPage() {
             {
               key: "assigned",
               label: "Cleaned by",
-              render: (r) => (r.team_members ? `${r.team_members.name} ${r.team_members.surname}` : "—"),
+              render: (r) =>
+                r.team_members ? `${r.team_members.name} ${r.team_members.surname}` : "—",
             },
             { key: "started_at", label: "Started", render: (r) => dt(r.started_at) },
             { key: "completed_at", label: "Completed", render: (r) => dt(r.completed_at) },
@@ -173,10 +177,18 @@ function ReportsPage() {
           empty="No maintenance history."
           columns={[
             { key: "room", label: "Room", render: (r) => r.rooms?.room_number ?? "—" },
-            { key: "priority", label: "Priority", render: (r) => <StatusBadge value={r.priority} /> },
+            {
+              key: "priority",
+              label: "Priority",
+              render: (r) => <StatusBadge value={r.priority} />,
+            },
             { key: "description", label: "Description" },
             { key: "status", label: "Status", render: (r) => <StatusBadge value={r.status} /> },
-            { key: "created_at", label: "Reported", render: (r) => new Date(r.created_at).toLocaleDateString() },
+            {
+              key: "created_at",
+              label: "Reported",
+              render: (r) => new Date(r.created_at).toLocaleDateString(),
+            },
             { key: "completed_date", label: "Completed", render: (r) => r.completed_date ?? "—" },
           ]}
         />
@@ -197,7 +209,9 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 function dt(value: string | null) {
-  return value ? new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—";
+  return value
+    ? new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+    : "—";
 }
 
 function byCamp(rooms: RoomRow[], occupied: Set<string>) {

@@ -62,7 +62,28 @@ export type AllocationRow = {
   department: string | null;
   comments: string | null;
   status: string;
-  rooms?: { room_number: string; buildings?: { name: string; camps?: { name: string } | null } | null } | null;
+  rooms?: {
+    room_number: string;
+    buildings?: { name: string; camps?: { name: string } | null } | null;
+  } | null;
+};
+
+export type AllocationHistoryRow = {
+  id: string;
+  allocation_id: string | null;
+  staff_id: string | null;
+  staff_name: string | null;
+  previous_room_id: string | null;
+  previous_room_number: string | null;
+  previous_bed: string | null;
+  new_room_id: string | null;
+  new_room_number: string | null;
+  new_bed: string | null;
+  action: string;
+  reason: string | null;
+  performed_by: string | null;
+  performed_by_name: string | null;
+  created_at: string;
 };
 
 export type HousekeepingRow = {
