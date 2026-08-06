@@ -194,7 +194,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       ) : null}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/85 px-4 py-3 backdrop-blur">
+        <header className="sticky top-0 z-30 flex flex-wrap items-center gap-3 border-b border-border bg-background/85 px-4 py-3 backdrop-blur">
           <Button
             variant="ghost"
             size="icon"
@@ -207,67 +207,69 @@ export function AppShell({ children }: { children: ReactNode }) {
           <p className="font-display text-lg">
             {NAV.find((n) => n.to === pathname)?.label ?? "Ten of Cups Camp Manager"}
           </p>
-          <div className="relative ml-auto hidden w-full max-w-md lg:block">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search camp, block, tent, staff..."
-              className="pl-9"
-            />
+          <div className="order-3 basis-full lg:order-none lg:ml-auto lg:basis-auto">
+            <div className="relative w-full lg:w-[28rem]">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search camp, block, tent number, staff name..."
+                className="pl-9"
+              />
 
-            {query ? (
-              <div className="absolute top-full right-0 left-0 z-50 mt-2 max-h-96 overflow-auto rounded-lg border border-border bg-background p-2 shadow-xl">
-                {hasMatches ? (
-                  <div className="space-y-2">
-                    <SearchSection
-                      title="Camp"
-                      items={campMatches.map((item) => ({
-                        key: item.id,
-                        label: item.name,
-                        detail: item.code ?? "",
-                        to: "/camps",
-                      }))}
-                      onSelect={() => setSearch("")}
-                    />
-                    <SearchSection
-                      title="Block"
-                      items={blockMatches.map((item) => ({
-                        key: item.id,
-                        label: item.name,
-                        detail: item.camps?.name ?? "",
-                        to: "/buildings",
-                      }))}
-                      onSelect={() => setSearch("")}
-                    />
-                    <SearchSection
-                      title="Tent"
-                      items={tentMatches.map((item) => ({
-                        key: item.id,
-                        label: `Tent ${item.room_number}`,
-                        detail: `${item.buildings?.name ?? ""}${item.buildings?.camps?.name ? ` · ${item.buildings?.camps?.name}` : ""}`,
-                        to: "/rooms",
-                      }))}
-                      onSelect={() => setSearch("")}
-                    />
-                    <SearchSection
-                      title="Staff"
-                      items={staffMatches.map((item) => ({
-                        key: item.id,
-                        label: `${item.name} ${item.surname}`,
-                        detail: item.department ?? "",
-                        to: "/team",
-                      }))}
-                      onSelect={() => setSearch("")}
-                    />
-                  </div>
-                ) : (
-                  <p className="px-2 py-1 text-sm text-muted-foreground">No results found.</p>
-                )}
-              </div>
-            ) : null}
+              {query ? (
+                <div className="absolute top-full right-0 left-0 z-50 mt-2 max-h-96 overflow-auto rounded-lg border border-border bg-background p-2 shadow-xl">
+                  {hasMatches ? (
+                    <div className="space-y-2">
+                      <SearchSection
+                        title="Camp"
+                        items={campMatches.map((item) => ({
+                          key: item.id,
+                          label: item.name,
+                          detail: item.code ?? "",
+                          to: "/camps",
+                        }))}
+                        onSelect={() => setSearch("")}
+                      />
+                      <SearchSection
+                        title="Block"
+                        items={blockMatches.map((item) => ({
+                          key: item.id,
+                          label: item.name,
+                          detail: item.camps?.name ?? "",
+                          to: "/buildings",
+                        }))}
+                        onSelect={() => setSearch("")}
+                      />
+                      <SearchSection
+                        title="Tent"
+                        items={tentMatches.map((item) => ({
+                          key: item.id,
+                          label: `Tent ${item.room_number}`,
+                          detail: `${item.buildings?.name ?? ""}${item.buildings?.camps?.name ? ` · ${item.buildings?.camps?.name}` : ""}`,
+                          to: "/rooms",
+                        }))}
+                        onSelect={() => setSearch("")}
+                      />
+                      <SearchSection
+                        title="Staff"
+                        items={staffMatches.map((item) => ({
+                          key: item.id,
+                          label: `${item.name} ${item.surname}`,
+                          detail: item.department ?? "",
+                          to: "/team",
+                        }))}
+                        onSelect={() => setSearch("")}
+                      />
+                    </div>
+                  ) : (
+                    <p className="px-2 py-1 text-sm text-muted-foreground">No results found.</p>
+                  )}
+                </div>
+              ) : null}
+            </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-1 lg:ml-0">
             <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="size-4" />
