@@ -12,6 +12,7 @@ export type Tbl =
   | "housekeeping_tasks"
   | "housekeeping_history"
   | "maintenance_reports"
+  | "maintenance_history"
   | "profiles"
   | "user_roles"
   | "staff_allocation_history";
@@ -112,16 +113,32 @@ export const HK_PRIORITY = [
 
 export const PRIORITIES = [
   { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
+  { value: "normal", label: "Normal" },
   { value: "high", label: "High" },
   { value: "critical", label: "Critical" },
 ];
 
 export const MAINT_STATUS = [
-  { value: "open", label: "Open" },
+  { value: "reported", label: "Reported" },
+  { value: "assigned", label: "Assigned" },
   { value: "in_progress", label: "In Progress" },
+  { value: "waiting_for_parts", label: "Waiting For Parts" },
+  { value: "inspection", label: "Inspection Required" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
+];
+
+export const MAINT_CATEGORIES = [
+  { value: "electrical", label: "Electrical" },
+  { value: "plumbing", label: "Plumbing" },
+  { value: "furniture", label: "Furniture" },
+  { value: "hvac", label: "HVAC" },
+  { value: "building", label: "Building" },
+  { value: "painting", label: "Painting" },
+  { value: "cleaning_equipment", label: "Cleaning Equipment" },
+  { value: "safety", label: "Safety" },
+  { value: "general", label: "General" },
+  { value: "other", label: "Other" },
 ];
 
 export const today = () => new Date().toISOString().slice(0, 10);

@@ -126,13 +126,33 @@ export type HousekeepingHistoryRow = {
 export type MaintenanceRow = {
   id: string;
   room_id: string;
+  work_order_number: string | null;
+  category: string;
   reported_by: string | null;
+  assigned_to: string | null;
   priority: string;
   description: string;
   status: string;
+  target_date: string | null;
   completed_date: string | null;
+  completion_notes: string | null;
   created_at: string;
-  rooms?: { room_number: string; buildings?: { name: string } | null } | null;
+  rooms?: {
+    room_number: string;
+    buildings?: { name: string; camps?: { name: string } | null } | null;
+  } | null;
+  reporter?: { name: string; surname: string } | null;
+  technician?: { name: string; surname: string } | null;
+};
+
+export type MaintenanceHistoryRow = {
+  id: string;
+  report_id: string;
+  from_status: string | null;
+  to_status: string;
+  changed_by: string | null;
+  notes: string | null;
+  created_at: string;
 };
 
 export type ProfileRow = {

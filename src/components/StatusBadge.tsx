@@ -37,6 +37,18 @@ const MAP: Record<string, { label: string; className: string }> = {
     label: "Normal",
     className: "bg-muted text-muted-foreground border-border",
   },
+  reported: {
+    label: "Reported",
+    className: "bg-status-cleaning/15 text-status-cleaning border-status-cleaning/30",
+  },
+  assigned: {
+    label: "Assigned",
+    className: "bg-status-occupied/15 text-status-occupied border-status-occupied/30",
+  },
+  waiting_for_parts: {
+    label: "Waiting For Parts",
+    className: "bg-status-maintenance/15 text-status-maintenance border-status-maintenance/30",
+  },
   open: {
     label: "Open",
     className: "bg-status-maintenance/15 text-status-maintenance border-status-maintenance/30",

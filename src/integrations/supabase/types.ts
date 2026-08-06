@@ -272,9 +272,50 @@ export type Database = {
           },
         ];
       };
+      maintenance_history: {
+        Row: {
+          id: string;
+          report_id: string;
+          from_status: string | null;
+          to_status: string;
+          changed_by: string | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          report_id: string;
+          from_status?: string | null;
+          to_status: string;
+          changed_by?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          report_id?: string;
+          from_status?: string | null;
+          to_status?: string;
+          changed_by?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_history_report_id_fkey";
+            columns: ["report_id"];
+            isOneToOne: false;
+            referencedRelation: "maintenance_reports";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       maintenance_reports: {
         Row: {
+          assigned_to: string | null;
+          category: string;
           completed_date: string | null;
+          completion_notes: string | null;
           created_at: string;
           deleted_at: string | null;
           description: string;
@@ -283,10 +324,15 @@ export type Database = {
           reported_by: string | null;
           room_id: string;
           status: string;
+          target_date: string | null;
           updated_at: string;
+          work_order_number: string | null;
         };
         Insert: {
+          assigned_to?: string | null;
+          category?: string;
           completed_date?: string | null;
+          completion_notes?: string | null;
           created_at?: string;
           deleted_at?: string | null;
           description: string;
@@ -295,10 +341,15 @@ export type Database = {
           reported_by?: string | null;
           room_id: string;
           status?: string;
+          target_date?: string | null;
           updated_at?: string;
+          work_order_number?: string | null;
         };
         Update: {
+          assigned_to?: string | null;
+          category?: string;
           completed_date?: string | null;
+          completion_notes?: string | null;
           created_at?: string;
           deleted_at?: string | null;
           description?: string;
@@ -307,9 +358,18 @@ export type Database = {
           reported_by?: string | null;
           room_id?: string;
           status?: string;
+          target_date?: string | null;
           updated_at?: string;
+          work_order_number?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "maintenance_reports_assigned_to_fkey";
+            columns: ["assigned_to"];
+            isOneToOne: false;
+            referencedRelation: "team_members";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "maintenance_reports_room_id_fkey";
             columns: ["room_id"];
