@@ -65,6 +65,32 @@ type PermissionRow = {
   users: string;
 };
 
+type LookupEntityRow = {
+  id: string;
+  entity: string;
+  key: string;
+};
+
+const LOOKUP_ENTITIES: LookupEntityRow[] = [
+  { id: "camps", entity: "Camps", key: "camps" },
+  { id: "blocks", entity: "Blocks", key: "blocks" },
+  { id: "tents", entity: "Tents", key: "tents" },
+  { id: "beds", entity: "Beds", key: "beds" },
+  { id: "staff", entity: "Staff", key: "staff" },
+  { id: "allocations", entity: "Allocations", key: "allocations" },
+  {
+    id: "allocation_history",
+    entity: "Allocation History",
+    key: "allocation_history",
+  },
+  { id: "housekeeping", entity: "Housekeeping", key: "housekeeping" },
+  { id: "maintenance", entity: "Maintenance", key: "maintenance" },
+  { id: "users", entity: "Users", key: "users" },
+  { id: "roles", entity: "Roles", key: "roles" },
+  { id: "reports", entity: "Reports", key: "reports" },
+  { id: "settings", entity: "Settings", key: "settings" },
+];
+
 function UsersPage() {
   const { role } = useAuth();
   const isAdmin = role === "administrator";
@@ -295,15 +321,33 @@ function UsersPage() {
       )}
 
       {section === "lookup" && (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <LookupCard
-            title="System Roles"
-            items={ROLES.map((item) => ({ value: item, label: LABEL[item] }))}
-          />
-          <LookupCard title="Room Status" items={ROOM_STATUS} />
-          <LookupCard title="Housekeeping Status" items={HK_STATUS} />
-          <LookupCard title="Maintenance Priority" items={PRIORITIES} />
-          <LookupCard title="Maintenance Status" items={MAINT_STATUS} />
+        <div className="space-y-4">
+          <Card className="shadow-lodge">
+            <CardHeader>
+              <CardTitle className="text-base">System Entities</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DataTable<LookupEntityRow>
+                rows={LOOKUP_ENTITIES}
+                empty="No lookup entities configured."
+                columns={[
+                  { key: "entity", label: "Entity" },
+                  { key: "key", label: "Key" },
+                ]}
+              />
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <LookupCard
+              title="System Roles"
+              items={ROLES.map((item) => ({ value: item, label: LABEL[item] }))}
+            />
+            <LookupCard title="Room Status" items={ROOM_STATUS} />
+            <LookupCard title="Housekeeping Status" items={HK_STATUS} />
+            <LookupCard title="Maintenance Priority" items={PRIORITIES} />
+            <LookupCard title="Maintenance Status" items={MAINT_STATUS} />
+          </div>
         </div>
       )}
     </div>
