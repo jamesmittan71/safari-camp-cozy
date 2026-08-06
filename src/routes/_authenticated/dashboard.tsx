@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { BedDouble, Building2, ClipboardList, Hammer, Tent, TrendingUp } from "lucide-react";
+import { BedDouble, ClipboardList, Hammer, Tent } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -47,8 +47,6 @@ type ActivityItem = {
 function Dashboard() {
   const day = today();
 
-  const { data: camps = [] } = useList("camps");
-  const { data: blocks = [] } = useList("buildings");
   const { data: tents = [] } = useList<RoomWithTime>("rooms", "*, buildings(name, camps(name))");
   const { data: allocations = [] } = useList<AllocationWithTime>(
     "allocations",
@@ -118,9 +116,21 @@ function Dashboard() {
   const maintenanceCompletedTodayCount = maintenance.filter(
     (item) => item.completed_date?.slice(0, 10) === day,
   ).length;
-  const housekeepingQueueCount = housekeeping.filter(
-    (task) => task.status === "to_clean" || task.status === "in_progress",
+
+  const todaysMovesCount = allocations.filter(
+    (item) => item.arrival_date === day || item.departure_date === day,
   ).length;
+
+  const staffOnSiteCount = useMemo(() => {
+    const names = new Set<string>();
+    for (const allocation of activeAllocations) {
+      const bedA = allocation.bed_a_name?.trim();
+      const bedB = allocation.bed_b_name?.trim();
+      if (bedA) names.add(bedA.toLowerCase());
+      if (bedB) names.add(bedB.toLowerCase());
+    }
+    return names.size > 0 ? names.size : occupiedBeds;
+  }, [activeAllocations, occupiedBeds]);
 
   const newestAllocations = useMemo<ActivityItem[]>(
     () =>
@@ -212,16 +222,18 @@ function Dashboard() {
         subtitle="Manager home screen for accommodation, housekeeping and maintenance."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-        <StatCard icon={Tent} label="Camp" value={camps.length} />
-        <StatCard icon={Building2} label="Blocks" value={blocks.length} />
-        <StatCard icon={Tent} label="Tents" value={tents.length} />
-        <StatCard icon={BedDouble} label="Beds" value={totalBeds} />
-        <StatCard icon={TrendingUp} label="Occupancy" value={occupancyPct} suffix="%" />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+        <StatCard icon={BedDouble} label="Occupancy %" value={occupancyPct} suffix="%" />
+        <StatCard
+          icon={Tent}
+          label="Available Beds"
+          value={availableBeds}
+          tone="text-status-available"
+        />
         <StatCard
           icon={ClipboardList}
-          label="Housekeeping"
-          value={housekeepingQueueCount}
+          label="Dirty Rooms"
+          value={dirtyTentIds.size}
           tone="text-status-cleaning"
         />
         <StatCard
@@ -230,6 +242,20 @@ function Dashboard() {
           value={activeMaintenance.length}
           tone="text-status-maintenance"
         />
+        <StatCard icon={ClipboardList} label="Today's Moves" value={todaysMovesCount} />
+        <StatCard
+          icon={ClipboardList}
+          label="Today's Cleaning"
+          value={cleaningCompletedTodayCount}
+          tone="text-status-cleaning"
+        />
+        <StatCard
+          icon={Hammer}
+          label="Today's Maintenance"
+          value={maintenanceCompletedTodayCount}
+          tone="text-status-maintenance"
+        />
+        <StatCard icon={BedDouble} label="Staff On Site" value={staffOnSiteCount} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
