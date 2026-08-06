@@ -15,7 +15,10 @@ export const Route = createFileRoute("/_authenticated/rooms")({
   head: () => ({
     meta: [
       { title: "Rooms — Ten of Cups Camp Manager" },
-      { name: "description", content: "Room register with bed configuration, occupancy limits and live status." },
+      {
+        name: "description",
+        content: "Room register with bed configuration, occupancy limits and live status.",
+      },
       { property: "og:title", content: "Rooms — Ten of Cups Camp Manager" },
       { property: "og:description", content: "Track every room's status across the reserve." },
     ],
@@ -38,7 +41,8 @@ function RoomsPage() {
   const [search, setSearch] = useState("");
 
   const filtered = rooms.filter((r) => {
-    const hay = `${r.room_number} ${r.buildings?.name ?? ""} ${r.buildings?.camps?.name ?? ""} ${r.status}`.toLowerCase();
+    const hay =
+      `${r.room_number} ${r.buildings?.name ?? ""} ${r.buildings?.camps?.name ?? ""} ${r.status}`.toLowerCase();
     return hay.includes(search.toLowerCase());
   });
 
@@ -49,7 +53,12 @@ function RoomsPage() {
         subtitle="Bed configuration, occupancy and current status for every room."
         action={
           canManage ? (
-            <Button onClick={() => { setEditing(undefined); setOpen(true); }}>
+            <Button
+              onClick={() => {
+                setEditing(undefined);
+                setOpen(true);
+              }}
+            >
               <Plus className="size-4" /> New room
             </Button>
           ) : null
@@ -70,12 +79,23 @@ function RoomsPage() {
           { key: "building", label: "Building", render: (r) => r.buildings?.name ?? "—" },
           { key: "camp", label: "Camp", render: (r) => r.buildings?.camps?.name ?? "—" },
           { key: "type", label: "Type", render: (r) => r.room_types?.name ?? "—" },
-          { key: "bed_configuration", label: "Beds", render: (r) => (r.bed_configuration === "double" ? "Double" : "Twin") },
+          {
+            key: "bed_configuration",
+            label: "Beds",
+            render: (r) => (r.bed_configuration === "double" ? "Double" : "Twin"),
+          },
           { key: "max_occupancy", label: "Max" },
           { key: "status", label: "Status", render: (r) => <StatusBadge value={r.status} /> },
           { key: "maintenance_notes", label: "Maintenance notes" },
         ]}
-        onEdit={canOperate ? (r) => { setEditing({ ...r } as unknown as RecordValues); setOpen(true); } : undefined}
+        onEdit={
+          canOperate
+            ? (r) => {
+                setEditing({ ...r } as unknown as RecordValues);
+                setOpen(true);
+              }
+            : undefined
+        }
         onDelete={canManage ? (r) => remove.mutate(r.id) : undefined}
       />
 
@@ -92,7 +112,10 @@ function RoomsPage() {
             label: "Building",
             type: "select",
             required: true,
-            options: buildings.map((b) => ({ value: b.id, label: `${b.name} — ${b.camps?.name ?? ""}` })),
+            options: buildings.map((b) => ({
+              value: b.id,
+              label: `${b.name} — ${b.camps?.name ?? ""}`,
+            })),
           },
           {
             name: "room_type_id",

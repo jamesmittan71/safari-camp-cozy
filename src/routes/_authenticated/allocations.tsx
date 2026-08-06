@@ -15,9 +15,16 @@ export const Route = createFileRoute("/_authenticated/allocations")({
   head: () => ({
     meta: [
       { title: "Room Allocations — Ten of Cups Camp Manager" },
-      { name: "description", content: "Allocate people to beds, manage arrivals and departures, prevent double bookings." },
+      {
+        name: "description",
+        content:
+          "Allocate people to beds, manage arrivals and departures, prevent double bookings.",
+      },
       { property: "og:title", content: "Room Allocations — Ten of Cups Camp Manager" },
-      { property: "og:description", content: "Bookings and bed allocations for the game farm camps." },
+      {
+        property: "og:description",
+        content: "Bookings and bed allocations for the game farm camps.",
+      },
     ],
   }),
   component: AllocationsPage,
@@ -30,7 +37,11 @@ function AllocationsPage() {
     "*, rooms(room_number, buildings(name, camps(name)))",
     "arrival_date",
   );
-  const { data: rooms = [] } = useList<RoomRow>("rooms", "*, buildings(name, camps(name))", "room_number");
+  const { data: rooms = [] } = useList<RoomRow>(
+    "rooms",
+    "*, buildings(name, camps(name))",
+    "room_number",
+  );
   const { data: members = [] } = useList<TeamMemberRow>("team_members", "*", "surname");
   const save = useSave("allocations", "Allocation");
   const remove = useSoftDelete("allocations", "Allocation");
@@ -57,7 +68,12 @@ function AllocationsPage() {
         subtitle="Arrivals, departures and bed assignments. Overlapping bookings are blocked automatically."
         action={
           canOperate ? (
-            <Button onClick={() => { setEditing(undefined); setOpen(true); }}>
+            <Button
+              onClick={() => {
+                setEditing(undefined);
+                setOpen(true);
+              }}
+            >
               <Plus className="size-4" /> New allocation
             </Button>
           ) : null
@@ -84,13 +100,18 @@ function AllocationsPage() {
           {
             key: "status",
             label: "Status",
-            render: (r) => (
-              <StatusBadge value={isActiveOn(r, day) ? "occupied" : r.status} />
-            ),
+            render: (r) => <StatusBadge value={isActiveOn(r, day) ? "occupied" : r.status} />,
           },
           { key: "comments", label: "Comments" },
         ]}
-        onEdit={canOperate ? (r) => { setEditing({ ...r } as RecordValues); setOpen(true); } : undefined}
+        onEdit={
+          canOperate
+            ? (r) => {
+                setEditing({ ...r } as RecordValues);
+                setOpen(true);
+              }
+            : undefined
+        }
         onDelete={canOperate ? (r) => remove.mutate(r.id) : undefined}
       />
 

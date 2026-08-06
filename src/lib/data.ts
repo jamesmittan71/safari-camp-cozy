@@ -12,7 +12,8 @@ export type Tbl =
   | "housekeeping_tasks"
   | "maintenance_reports"
   | "profiles"
-  | "user_roles";
+  | "user_roles"
+  | "staff_allocation_history";
 
 const SOFT_DELETE_TABLES: Tbl[] = [
   "camps",
@@ -28,11 +29,7 @@ const SOFT_DELETE_TABLES: Tbl[] = [
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const db = supabase as any;
 
-export function useList<T = Record<string, any>>(
-  table: Tbl,
-  select = "*",
-  order = "created_at",
-) {
+export function useList<T = Record<string, any>>(table: Tbl, select = "*", order = "created_at") {
   return useQuery({
     queryKey: [table, select],
     queryFn: async () => {
@@ -81,7 +78,6 @@ export function useSoftDelete(table: Tbl, label = "Record") {
     onSuccess: () => {
       invalidate();
       toast.success(`${label} deleted`);
-
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -120,6 +116,20 @@ export const MAINT_STATUS = [
 ];
 
 export const today = () => new Date().toISOString().slice(0, 10);
+
+export const EMPLOYMENT_STATUS = [
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+  { value: "on_leave", label: "On Leave" },
+  { value: "terminated", label: "Terminated" },
+];
+
+export const GENDER_OPTIONS = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "other", label: "Other" },
+  { value: "prefer_not_to_say", label: "Prefer not to say" },
+];
 
 export function isActiveOn(
   a: { arrival_date: string; departure_date: string; status?: string },

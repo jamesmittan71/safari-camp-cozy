@@ -43,11 +43,36 @@ export type TeamMemberRow = {
   name: string;
   surname: string;
   department: string | null;
+  position: string | null;
+  gender: string | null;
   phone: string | null;
   email: string | null;
   vehicle_registration: string | null;
   emergency_contact: string | null;
+  employment_status: string;
+  date_joined: string | null;
   notes: string | null;
+};
+
+export type StaffAllocationHistoryRow = {
+  id: string;
+  team_member_id: string;
+  from_room_id: string | null;
+  from_bed: string | null;
+  to_room_id: string | null;
+  to_bed: string | null;
+  allocation_date: string;
+  reason: string | null;
+  created_by: string | null;
+  created_at: string;
+  from_room?: {
+    room_number: string;
+    buildings?: { name: string; camps?: { name: string } | null } | null;
+  } | null;
+  to_room?: {
+    room_number: string;
+    buildings?: { name: string; camps?: { name: string } | null } | null;
+  } | null;
 };
 
 export type AllocationRow = {
@@ -62,7 +87,10 @@ export type AllocationRow = {
   department: string | null;
   comments: string | null;
   status: string;
-  rooms?: { room_number: string; buildings?: { name: string; camps?: { name: string } | null } | null } | null;
+  rooms?: {
+    room_number: string;
+    buildings?: { name: string; camps?: { name: string } | null } | null;
+  } | null;
 };
 
 export type HousekeepingRow = {

@@ -14,7 +14,11 @@ export const Route = createFileRoute("/_authenticated/users")({
   head: () => ({
     meta: [
       { title: "User Access — Ten of Cups Camp Manager" },
-      { name: "description", content: "Assign administrator, manager, housekeeping and read-only access to staff accounts." },
+      {
+        name: "description",
+        content:
+          "Assign administrator, manager, housekeeping and read-only access to staff accounts.",
+      },
       { property: "og:title", content: "User Access — Ten of Cups Camp Manager" },
       { property: "og:description", content: "Role-based access control for the camp manager." },
     ],
@@ -41,7 +45,10 @@ function UsersPage() {
     mutationFn: async ({ userId, role, has }: { userId: string; role: string; has: boolean }) => {
       const table = supabase.from("user_roles");
       const { error } = has
-        ? await table.delete().eq("user_id", userId).eq("role", role as never)
+        ? await table
+            .delete()
+            .eq("user_id", userId)
+            .eq("role", role as never)
         : await table.insert({ user_id: userId, role: role as never });
       if (error) throw new Error(error.message);
     },

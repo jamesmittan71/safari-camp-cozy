@@ -41,20 +41,32 @@ export function OccupancyCalendar({
   return (
     <div className="surface-lodge p-4">
       <div className="mb-4 flex items-center justify-between">
-        <Button variant="ghost" size="icon" aria-label="Previous month" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Previous month"
+          onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
+        >
           <ChevronLeft className="size-4" />
         </Button>
         <p className="font-display text-xl">
           {cursor.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
         </p>
-        <Button variant="ghost" size="icon" aria-label="Next month" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Next month"
+          onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
+        >
           <ChevronRight className="size-4" />
         </Button>
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-center text-[11px] tracking-wide uppercase text-muted-foreground">
         {DAY_LABELS.map((d) => (
-          <div key={d} className="py-1">{d}</div>
+          <div key={d} className="py-1">
+            {d}
+          </div>
         ))}
       </div>
 
@@ -74,16 +86,24 @@ export function OccupancyCalendar({
               <p className="text-xs font-medium">{Number(day.slice(-2))}</p>
               <div className="mt-1 space-y-0.5 text-[10px] leading-tight">
                 {occupied > 0 ? (
-                  <p className="rounded bg-status-occupied/15 px-1 text-status-occupied">{occupied} occupied</p>
+                  <p className="rounded bg-status-occupied/15 px-1 text-status-occupied">
+                    {occupied} occupied
+                  </p>
                 ) : null}
                 {available > 0 ? (
-                  <p className="rounded bg-status-available/15 px-1 text-status-available">{available} available</p>
+                  <p className="rounded bg-status-available/15 px-1 text-status-available">
+                    {available} available
+                  </p>
                 ) : null}
                 {cleaningCount > 0 ? (
-                  <p className="rounded bg-status-cleaning/15 px-1 text-status-cleaning">{cleaningCount} cleaning</p>
+                  <p className="rounded bg-status-cleaning/15 px-1 text-status-cleaning">
+                    {cleaningCount} cleaning
+                  </p>
                 ) : null}
                 {maintenanceCount > 0 ? (
-                  <p className="rounded bg-status-maintenance/15 px-1 text-status-maintenance">{maintenanceCount} maint.</p>
+                  <p className="rounded bg-status-maintenance/15 px-1 text-status-maintenance">
+                    {maintenanceCount} maint.
+                  </p>
                 ) : null}
               </div>
             </div>
@@ -92,10 +112,18 @@ export function OccupancyCalendar({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5"><span className="size-3 rounded-sm bg-status-available" /> Available</span>
-        <span className="flex items-center gap-1.5"><span className="size-3 rounded-sm bg-status-occupied" /> Occupied</span>
-        <span className="flex items-center gap-1.5"><span className="size-3 rounded-sm bg-status-cleaning" /> Cleaning Required</span>
-        <span className="flex items-center gap-1.5"><span className="size-3 rounded-sm bg-status-maintenance" /> Maintenance</span>
+        <span className="flex items-center gap-1.5">
+          <span className="size-3 rounded-sm bg-status-available" /> Available
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="size-3 rounded-sm bg-status-occupied" /> Occupied
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="size-3 rounded-sm bg-status-cleaning" /> Cleaning Required
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="size-3 rounded-sm bg-status-maintenance" /> Maintenance
+        </span>
       </div>
     </div>
   );

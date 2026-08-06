@@ -15,9 +15,15 @@ export const Route = createFileRoute("/_authenticated/housekeeping")({
   head: () => ({
     meta: [
       { title: "Housekeeping — Ten of Cups Camp Manager" },
-      { name: "description", content: "Cleaning queue, progress tracking, history and housekeeping notes." },
+      {
+        name: "description",
+        content: "Cleaning queue, progress tracking, history and housekeeping notes.",
+      },
       { property: "og:title", content: "Housekeeping — Ten of Cups Camp Manager" },
-      { property: "og:description", content: "Track rooms to clean through to ready for occupancy." },
+      {
+        property: "og:description",
+        content: "Track rooms to clean through to ready for occupancy.",
+      },
     ],
   }),
   component: HousekeepingPage,
@@ -61,7 +67,12 @@ function HousekeepingPage() {
         subtitle="From rooms to clean through to ready for occupancy."
         action={
           canOperate ? (
-            <Button onClick={() => { setEditing(undefined); setOpen(true); }}>
+            <Button
+              onClick={() => {
+                setEditing(undefined);
+                setOpen(true);
+              }}
+            >
               <Plus className="size-4" /> New cleaning task
             </Button>
           ) : null
@@ -90,7 +101,8 @@ function HousekeepingPage() {
           {
             key: "assigned",
             label: "Assigned to",
-            render: (r) => (r.team_members ? `${r.team_members.name} ${r.team_members.surname}` : "—"),
+            render: (r) =>
+              r.team_members ? `${r.team_members.name} ${r.team_members.surname}` : "—",
           },
           { key: "started_at", label: "Started", render: (r) => fmt(r.started_at) },
           { key: "completed_at", label: "Completed", render: (r) => fmt(r.completed_at) },
@@ -101,12 +113,23 @@ function HousekeepingPage() {
             ? (r) =>
                 r.status === "ready" ? null : (
                   <Button size="sm" variant="secondary" onClick={() => advance(r)}>
-                    {r.status === "to_clean" ? "Start" : r.status === "in_progress" ? "Complete" : "Mark ready"}
+                    {r.status === "to_clean"
+                      ? "Start"
+                      : r.status === "in_progress"
+                        ? "Complete"
+                        : "Mark ready"}
                   </Button>
                 )
             : undefined
         }
-        onEdit={canOperate ? (r) => { setEditing({ ...r } as RecordValues); setOpen(true); } : undefined}
+        onEdit={
+          canOperate
+            ? (r) => {
+                setEditing({ ...r } as RecordValues);
+                setOpen(true);
+              }
+            : undefined
+        }
         onDelete={canOperate ? (r) => remove.mutate(r.id) : undefined}
       />
 
@@ -122,7 +145,10 @@ function HousekeepingPage() {
             label: "Room",
             type: "select",
             required: true,
-            options: rooms.map((r) => ({ value: r.id, label: `${r.room_number} — ${r.buildings?.name ?? ""}` })),
+            options: rooms.map((r) => ({
+              value: r.id,
+              label: `${r.room_number} — ${r.buildings?.name ?? ""}`,
+            })),
           },
           { name: "status", label: "Status", type: "select", options: HK_STATUS },
           {
