@@ -30,11 +30,13 @@ function Stat({
   label,
   value,
   tone = "text-accent",
+  suffix,
 }: {
   icon: typeof Tent;
   label: string;
   value: number;
   tone?: string;
+  suffix?: string;
 }) {
   return (
     <div className="surface-lodge p-4">
@@ -42,7 +44,10 @@ function Stat({
         <p className="text-xs tracking-wide uppercase text-muted-foreground">{label}</p>
         <Icon className={`size-4 ${tone}`} />
       </div>
-      <p className="mt-2 font-display text-3xl">{value}</p>
+      <p className="mt-2 font-display text-3xl">
+        {value}
+        {suffix ?? ""}
+      </p>
     </div>
   );
 }
@@ -172,6 +177,7 @@ function Dashboard() {
           label="Occupancy %"
           value={occupancyPercent}
           tone="text-status-cleaning"
+          suffix="%"
         />
         <Stat
           icon={Sparkles}
@@ -210,7 +216,12 @@ function Dashboard() {
                         : "No staff assigned"}
                     </p>
                   </div>
-                  <Badge variant="secondary">{allocation.arrival_date}</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{allocation.arrival_date}</Badge>
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/allocations">Open</Link>
+                    </Button>
+                  </div>
                 </div>
               ))
             ) : (
@@ -239,11 +250,16 @@ function Dashboard() {
                       {task.status.replace(/_/g, " ")}
                     </p>
                   </div>
-                  <Badge variant="outline">
-                    {task.team_members
-                      ? `${task.team_members.name} ${task.team_members.surname}`
-                      : "Unassigned"}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">
+                      {task.team_members
+                        ? `${task.team_members.name} ${task.team_members.surname}`
+                        : "Unassigned"}
+                    </Badge>
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/housekeeping">Open</Link>
+                    </Button>
+                  </div>
                 </div>
               ))
             ) : (
@@ -270,7 +286,12 @@ function Dashboard() {
                     <p className="font-medium">{issue.rooms?.room_number ?? "Tent"}</p>
                     <p className="text-sm text-muted-foreground">{issue.description}</p>
                   </div>
-                  <Badge variant="outline">{issue.priority}</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{issue.priority}</Badge>
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/maintenance">Open</Link>
+                    </Button>
+                  </div>
                 </div>
               ))
             ) : (
@@ -295,7 +316,12 @@ function Dashboard() {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <p className="font-medium">{change.title}</p>
-                    <Badge variant="secondary">{change.type}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">{change.type}</Badge>
+                      <Button asChild variant="outline" size="sm">
+                        <Link to="/accommodation-board">Open</Link>
+                      </Button>
+                    </div>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">{change.detail}</p>
                 </div>
