@@ -6,20 +6,22 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isActiveOn, today, useList } from "@/lib/data";
-import type {
-  AllocationRow,
-  HousekeepingRow,
-  MaintenanceRow,
-  RoomRow,
-} from "@/lib/types";
+import type { AllocationRow, HousekeepingRow, MaintenanceRow, RoomRow } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
     meta: [
       { title: "Reports — Ten of Cups Camp Manager" },
-      { name: "description", content: "Occupancy, room history, cleaning, maintenance, current guests and availability reports." },
+      {
+        name: "description",
+        content:
+          "Occupancy, room history, cleaning, maintenance, current guests and availability reports.",
+      },
       { property: "og:title", content: "Reports — Ten of Cups Camp Manager" },
-      { property: "og:description", content: "Operational reporting across the game farm camps." },
+      {
+        property: "og:description",
+        content: "Operational reporting across the game farm camps.",
+      },
     ],
   }),
   component: ReportsPage,
@@ -38,7 +40,11 @@ function ReportsPage() {
   const [tab, setTab] = useState("occupancy");
   const day = today();
 
-  const { data: rooms = [] } = useList<RoomRow>("rooms", "*, buildings(name, camps(name))", "room_number");
+  const { data: rooms = [] } = useList<RoomRow>(
+    "rooms",
+    "*, buildings(name, camps(name))",
+    "room_number",
+  );
   const { data: allocations = [] } = useList<AllocationRow>(
     "allocations",
     "*, rooms(room_number, buildings(name, camps(name)))",
@@ -54,12 +60,144 @@ function ReportsPage() {
   );
 
   const active = useMemo(() => allocations.filter((a) => isActiveOn(a, day)), [allocations, day]);
-  const occupiedIds = new Set(active.map((a) => a.room_id));
+  const occupiedIds = useMemo(() => new Set(active.map((a) => a.room_id)), [active]);
   const rate = rooms.length ? Math.round((occupiedIds.size / rooms.length) * 100) : 0;
+
+  const campRows = useMemo(() => byCamp(rooms, occupiedIds), [rooms, occupiedIds]);
+  const blockRows = useMemo(() => byBlock(rooms, occupiedIds), [rooms, occupiedIds]);
+
+  const totalBeds = useMemo(
+    () => rooms.reduce((total, room) => total + getBedCount(room), 0),
+    [rooms],
+  );
+  const occupiedBeds = useMemo(
+    () => active.reduce((total, allocation) => total + getOccupancyCount(allocation), 0),
+    [active],
+  );
+  const availableBeds = Math.max(totalBeds - occupiedBeds, 0);
+
+  const dirtyTentCount = useMemo(() => {
+    const dirtyRooms = new Set<string>();
+    for (const room of rooms) {
+      if (room.status === "cleaning_required") dirtyRooms.add(room.id);
+    }
+    for (const task of cleaning) {
+      if (task.status === "to_clean" || task.status === "in_progress") dirtyRooms.add(task.room_id);
+    }
+    return dirtyRooms.size;
+  }, [rooms, cleaning]);
+
+  const openMaintenanceCount = useMemo(
+    () =>
+      maintenance.filter((item) => item.status !== "completed" && item.status !== "cancelled")
+        .length,
+    [maintenance],
+  );
+
+  const exportRows = useMemo<Record<string, string>[]>(() => {
+    if (tab === "occupancy") {
+      return blockRows.map((row) => ({
+        camp: row.camp,
+        block: row.block,
+        tents: String(row.total),
+        occupied_tents: String(row.occupied),
+        available_tents: String(row.available),
+        occupancy_rate: row.rate,
+      }));
+    }
+
+    if (tab === "guests") {
+      return active.map((row) => ({
+        tent: row.rooms?.room_number ?? "",
+        camp: row.rooms?.buildings?.camps?.name ?? "",
+        bed_a: row.bed_a_name ?? "",
+        bed_b: row.bed_b_name ?? "",
+        department: row.department ?? "",
+        arrival_date: row.arrival_date,
+        departure_date: row.departure_date,
+      }));
+    }
+
+    if (tab === "available") {
+      return rooms
+        .filter((room) => room.status === "available" && !occupiedIds.has(room.id))
+        .map((row) => ({
+          tent: row.room_number,
+          block: row.buildings?.name ?? "",
+          camp: row.buildings?.camps?.name ?? "",
+          beds: String(getBedCount(row)),
+          status: row.status,
+        }));
+    }
+
+    if (tab === "history") {
+      return allocations.map((row) => ({
+        tent: row.rooms?.room_number ?? "",
+        arrival_date: row.arrival_date,
+        departure_date: row.departure_date,
+        bed_a: row.bed_a_name ?? "",
+        bed_b: row.bed_b_name ?? "",
+        department: row.department ?? "",
+        status: row.status,
+      }));
+    }
+
+    if (tab === "cleaning") {
+      return cleaning.map((row) => ({
+        tent: row.rooms?.room_number ?? "",
+        status: row.status,
+        assigned_to: row.team_members ? `${row.team_members.name} ${row.team_members.surname}` : "",
+        started_at: row.started_at ?? "",
+        completed_at: row.completed_at ?? "",
+        notes: row.notes ?? "",
+      }));
+    }
+
+    return maintenance.map((row) => ({
+      tent: row.rooms?.room_number ?? "",
+      priority: row.priority,
+      description: row.description,
+      status: row.status,
+      reported_at: row.created_at,
+      completed_date: row.completed_date ?? "",
+    }));
+  }, [tab, blockRows, active, rooms, occupiedIds, allocations, cleaning, maintenance]);
+
+  const exportCsv = () => {
+    if (!exportRows.length) return;
+
+    const columns = Object.keys(exportRows[0]);
+    const header = columns.join(",");
+    const lines = exportRows.map((row) =>
+      columns
+        .map((column) => {
+          const value = row[column] ?? "";
+          return `"${value.replace(/"/g, '""')}"`;
+        })
+        .join(","),
+    );
+
+    const csv = [header, ...lines].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `occupancy-reports-${tab}-${day}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div>
-      <PageHeader title="Reports" subtitle="Live operational reporting across every camp." />
+      <PageHeader
+        title="Reports"
+        subtitle="Live operational reporting across every camp."
+        action={
+          <Button onClick={exportCsv} disabled={!exportRows.length}>
+            Export CSV
+          </Button>
+        }
+      />
 
       <div className="mb-6 flex flex-wrap gap-2">
         {TABS.map((t) => (
@@ -76,29 +214,55 @@ function ReportsPage() {
 
       {tab === "occupancy" && (
         <div className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-6">
             <Stat label="Occupancy rate" value={`${rate}%`} />
             <Stat label="Rooms occupied" value={String(occupiedIds.size)} />
             <Stat label="Total rooms" value={String(rooms.length)} />
+            <Stat label="Available beds" value={String(availableBeds)} />
+            <Stat label="Dirty tents" value={String(dirtyTentCount)} />
+            <Stat label="Maintenance" value={String(openMaintenanceCount)} />
           </div>
-          <Card className="shadow-lodge">
-            <CardHeader>
-              <CardTitle className="font-display text-xl">Occupancy by camp</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <DataTable
-                rows={byCamp(rooms, occupiedIds)}
-                empty="No camps yet."
-                columns={[
-                  { key: "camp", label: "Camp" },
-                  { key: "total", label: "Rooms" },
-                  { key: "occupied", label: "Occupied" },
-                  { key: "available", label: "Available" },
-                  { key: "rate", label: "Rate" },
-                ]}
-              />
-            </CardContent>
-          </Card>
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            <Card className="shadow-lodge">
+              <CardHeader>
+                <CardTitle className="font-display text-xl">Occupancy by camp</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  rows={campRows}
+                  empty="No camps yet."
+                  columns={[
+                    { key: "camp", label: "Camp" },
+                    { key: "total", label: "Tents" },
+                    { key: "occupied", label: "Occupied" },
+                    { key: "available", label: "Available" },
+                    { key: "rate", label: "Rate" },
+                  ]}
+                />
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-lodge">
+              <CardHeader>
+                <CardTitle className="font-display text-xl">Occupancy by block</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  rows={blockRows}
+                  empty="No blocks yet."
+                  columns={[
+                    { key: "camp", label: "Camp" },
+                    { key: "block", label: "Block" },
+                    { key: "total", label: "Tents" },
+                    { key: "occupied", label: "Occupied" },
+                    { key: "available", label: "Available" },
+                    { key: "rate", label: "Rate" },
+                  ]}
+                />
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
 
@@ -126,7 +290,7 @@ function ReportsPage() {
             { key: "room_number", label: "Room" },
             { key: "building", label: "Building", render: (r) => r.buildings?.name ?? "—" },
             { key: "camp", label: "Camp", render: (r) => r.buildings?.camps?.name ?? "—" },
-            { key: "max_occupancy", label: "Sleeps" },
+            { key: "beds", label: "Beds", render: (r) => getBedCount(r) },
             { key: "status", label: "Status", render: (r) => <StatusBadge value={r.status} /> },
           ]}
         />
@@ -158,7 +322,8 @@ function ReportsPage() {
             {
               key: "assigned",
               label: "Cleaned by",
-              render: (r) => (r.team_members ? `${r.team_members.name} ${r.team_members.surname}` : "—"),
+              render: (r) =>
+                r.team_members ? `${r.team_members.name} ${r.team_members.surname}` : "—",
             },
             { key: "started_at", label: "Started", render: (r) => dt(r.started_at) },
             { key: "completed_at", label: "Completed", render: (r) => dt(r.completed_at) },
@@ -173,10 +338,18 @@ function ReportsPage() {
           empty="No maintenance history."
           columns={[
             { key: "room", label: "Room", render: (r) => r.rooms?.room_number ?? "—" },
-            { key: "priority", label: "Priority", render: (r) => <StatusBadge value={r.priority} /> },
+            {
+              key: "priority",
+              label: "Priority",
+              render: (r) => <StatusBadge value={r.priority} />,
+            },
             { key: "description", label: "Description" },
             { key: "status", label: "Status", render: (r) => <StatusBadge value={r.status} /> },
-            { key: "created_at", label: "Reported", render: (r) => new Date(r.created_at).toLocaleDateString() },
+            {
+              key: "created_at",
+              label: "Reported",
+              render: (r) => new Date(r.created_at).toLocaleDateString(),
+            },
             { key: "completed_date", label: "Completed", render: (r) => r.completed_date ?? "—" },
           ]}
         />
@@ -197,7 +370,9 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 function dt(value: string | null) {
-  return value ? new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—";
+  return value
+    ? new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+    : "—";
 }
 
 function byCamp(rooms: RoomRow[], occupied: Set<string>) {
@@ -209,9 +384,49 @@ function byCamp(rooms: RoomRow[], occupied: Set<string>) {
     if (occupied.has(room.id)) entry.occupied += 1;
     map.set(camp, entry);
   }
-  return [...map.values()].map((e) => ({
-    ...e,
-    available: e.total - e.occupied,
-    rate: `${e.total ? Math.round((e.occupied / e.total) * 100) : 0}%`,
+
+  return [...map.values()].map((entry) => ({
+    ...entry,
+    available: entry.total - entry.occupied,
+    rate: `${entry.total ? Math.round((entry.occupied / entry.total) * 100) : 0}%`,
   }));
+}
+
+function byBlock(rooms: RoomRow[], occupied: Set<string>) {
+  const map = new Map<
+    string,
+    { id: string; camp: string; block: string; total: number; occupied: number }
+  >();
+  for (const room of rooms) {
+    const camp = room.buildings?.camps?.name ?? "Unassigned";
+    const block = room.buildings?.name ?? "Unassigned";
+    const id = `${camp}::${block}`;
+    const entry = map.get(id) ?? { id, camp, block, total: 0, occupied: 0 };
+    entry.total += 1;
+    if (occupied.has(room.id)) entry.occupied += 1;
+    map.set(id, entry);
+  }
+
+  return [...map.values()].map((entry) => ({
+    ...entry,
+    available: entry.total - entry.occupied,
+    rate: `${entry.total ? Math.round((entry.occupied / entry.total) * 100) : 0}%`,
+  }));
+}
+
+function getBedCount(room: RoomRow) {
+  return room.bed_configuration === "single"
+    ? 1
+    : room.bed_configuration === "twin"
+      ? 2
+      : room.max_occupancy;
+}
+
+function getOccupancyCount(allocation: AllocationRow | undefined) {
+  if (!allocation) return 0;
+
+  const explicitBeds = [allocation.bed_a, allocation.bed_b].filter(Boolean).length;
+  if (explicitBeds > 0) return explicitBeds;
+
+  return [allocation.bed_a_name, allocation.bed_b_name].filter(Boolean).length;
 }
