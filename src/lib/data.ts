@@ -17,6 +17,10 @@ export type Tbl =
   | "user_roles"
   | "staff_allocation_history";
 
+type ListOptions = {
+  refetchInterval?: number;
+};
+
 const SOFT_DELETE_TABLES: Tbl[] = [
   "camps",
   "buildings",
@@ -31,9 +35,14 @@ const SOFT_DELETE_TABLES: Tbl[] = [
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const db = supabase as any;
 
-export function useList<T = Record<string, any>>(table: Tbl, select = "*", order = "created_at") {
+export function useList<T = Record<string, any>>(
+  table: Tbl,
+  select = "*",
+  order = "created_at",
+  options?: ListOptions,
+) {
   return useQuery({
-    queryKey: [table, select],
+    queryKey: [table, select, order],
     queryFn: async () => {
       let q = db.from(table).select(select);
       if (SOFT_DELETE_TABLES.includes(table)) q = q.is("deleted_at", null);
@@ -41,6 +50,7 @@ export function useList<T = Record<string, any>>(table: Tbl, select = "*", order
       if (error) throw new Error(error.message);
       return (data ?? []) as T[];
     },
+    refetchInterval: options?.refetchInterval,
   });
 }
 
