@@ -93,7 +93,11 @@ export type MaintenanceRow = {
   status: string;
   completed_date: string | null;
   created_at: string;
-  rooms?: { room_number: string; buildings?: { name: string } | null } | null;
+  rooms?: {
+    room_number: string;
+    buildings?: { name: string; camps?: { name: string } | null } | null;
+  } | null;
+  team_members?: { name: string; surname: string } | null;
 };
 
 export type ProfileRow = {

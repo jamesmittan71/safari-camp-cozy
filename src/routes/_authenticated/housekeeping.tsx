@@ -109,14 +109,14 @@ function HousekeepingPage() {
             { key: "tent", label: "Tent", render: (r) => r.rooms?.room_number ?? "—" },
             {
               key: "assigned_cleaner",
-              label: "Assigned Cleaner",
+              label: "Cleaner",
               render: (r) =>
                 r.team_members ? `${r.team_members.name} ${r.team_members.surname}` : "—",
             },
             { key: "status", label: "Status", render: (r) => <StatusBadge value={r.status} /> },
             {
               key: "completed",
-              label: "Completed",
+              label: "Complete",
               render: (r) =>
                 r.completed_at || r.status === "complete" || r.status === "ready" ? "Yes" : "No",
             },
