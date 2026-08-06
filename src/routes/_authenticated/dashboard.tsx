@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { BedDouble, Building2, ClipboardList, Sparkles, Tent, Wrench } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isActiveOn, today, useList } from "@/lib/data";
 import type { AllocationRow, HousekeepingRow, MaintenanceRow, RoomRow } from "@/lib/types";
@@ -188,8 +189,11 @@ function Dashboard() {
 
       <div className="mt-6 grid gap-4 xl:grid-cols-2">
         <Card className="shadow-lodge">
-          <CardHeader>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
             <CardTitle>Recent Allocations</CardTitle>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/allocations">View all</Link>
+            </Button>
           </CardHeader>
           <CardContent className="space-y-3">
             {recentAllocations.length ? (
@@ -216,8 +220,11 @@ function Dashboard() {
         </Card>
 
         <Card className="shadow-lodge">
-          <CardHeader>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
             <CardTitle>Housekeeping Due</CardTitle>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/housekeeping">Open queue</Link>
+            </Button>
           </CardHeader>
           <CardContent className="space-y-3">
             {housekeepingDue.length ? (
@@ -246,8 +253,11 @@ function Dashboard() {
         </Card>
 
         <Card className="shadow-lodge">
-          <CardHeader>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
             <CardTitle>Maintenance Queue</CardTitle>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/maintenance">Open queue</Link>
+            </Button>
           </CardHeader>
           <CardContent className="space-y-3">
             {maintenanceQueue.length ? (
@@ -270,8 +280,11 @@ function Dashboard() {
         </Card>
 
         <Card className="shadow-lodge">
-          <CardHeader>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
             <CardTitle>Today's Changes</CardTitle>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/accommodation-board">Open board</Link>
+            </Button>
           </CardHeader>
           <CardContent className="space-y-3">
             {todayChanges.length ? (
