@@ -161,14 +161,56 @@ export type Database = {
         };
         Relationships: [];
       };
+      housekeeping_history: {
+        Row: {
+          id: string;
+          task_id: string;
+          from_status: string | null;
+          to_status: string;
+          changed_by: string | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          task_id: string;
+          from_status?: string | null;
+          to_status: string;
+          changed_by?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          task_id?: string;
+          from_status?: string | null;
+          to_status?: string;
+          changed_by?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "housekeeping_history_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "housekeeping_tasks";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       housekeeping_tasks: {
         Row: {
           assigned_to: string | null;
           completed_at: string | null;
           created_at: string;
+          date_assigned: string | null;
           deleted_at: string | null;
           id: string;
+          inspection_notes: string | null;
+          inspected_by: string | null;
           notes: string | null;
+          priority: string;
           room_id: string;
           started_at: string | null;
           status: string;
@@ -178,9 +220,13 @@ export type Database = {
           assigned_to?: string | null;
           completed_at?: string | null;
           created_at?: string;
+          date_assigned?: string | null;
           deleted_at?: string | null;
           id?: string;
+          inspection_notes?: string | null;
+          inspected_by?: string | null;
           notes?: string | null;
+          priority?: string;
           room_id: string;
           started_at?: string | null;
           status?: string;
@@ -190,9 +236,13 @@ export type Database = {
           assigned_to?: string | null;
           completed_at?: string | null;
           created_at?: string;
+          date_assigned?: string | null;
           deleted_at?: string | null;
           id?: string;
+          inspection_notes?: string | null;
+          inspected_by?: string | null;
           notes?: string | null;
+          priority?: string;
           room_id?: string;
           started_at?: string | null;
           status?: string;
@@ -202,6 +252,13 @@ export type Database = {
           {
             foreignKeyName: "housekeeping_tasks_assigned_to_fkey";
             columns: ["assigned_to"];
+            isOneToOne: false;
+            referencedRelation: "team_members";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "housekeeping_tasks_inspected_by_fkey";
+            columns: ["inspected_by"];
             isOneToOne: false;
             referencedRelation: "team_members";
             referencedColumns: ["id"];

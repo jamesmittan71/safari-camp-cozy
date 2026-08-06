@@ -17,21 +17,25 @@ const MAP: Record<string, { label: string; className: string }> = {
     label: "Out of Service",
     className: "bg-status-maintenance/15 text-status-maintenance border-status-maintenance/30",
   },
-  to_clean: {
-    label: "To Clean",
+  dirty: {
+    label: "Dirty",
     className: "bg-status-cleaning/15 text-status-cleaning border-status-cleaning/30",
   },
-  in_progress: {
-    label: "In Progress",
+  scheduled: {
+    label: "Cleaning Scheduled",
     className: "bg-status-occupied/15 text-status-occupied border-status-occupied/30",
   },
-  complete: {
-    label: "Complete",
+  inspection: {
+    label: "Inspection Required",
+    className: "bg-status-maintenance/15 text-status-maintenance border-status-maintenance/30",
+  },
+  clean: {
+    label: "Clean",
     className: "bg-status-available/15 text-status-available border-status-available/30",
   },
-  ready: {
-    label: "Ready",
-    className: "bg-status-available/15 text-status-available border-status-available/30",
+  normal: {
+    label: "Normal",
+    className: "bg-muted text-muted-foreground border-border",
   },
   open: {
     label: "Open",
