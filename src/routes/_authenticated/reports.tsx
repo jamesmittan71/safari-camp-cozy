@@ -125,6 +125,23 @@ function ReportsPage() {
       ? Math.round((cleaningCompletedToday / cleaningTouchedToday.length) * 100)
       : 0;
 
+  const housekeepingOpenCount = useMemo(
+    () =>
+      cleaning.filter((task) => task.status === "to_clean" || task.status === "in_progress").length,
+    [cleaning],
+  );
+
+  const staffOnSiteCount = useMemo(() => {
+    const names = new Set<string>();
+    for (const allocation of active) {
+      const bedA = allocation.bed_a_name?.trim();
+      const bedB = allocation.bed_b_name?.trim();
+      if (bedA) names.add(bedA.toLowerCase());
+      if (bedB) names.add(bedB.toLowerCase());
+    }
+    return names.size > 0 ? names.size : occupiedBeds;
+  }, [active, occupiedBeds]);
+
   const todaysActivity = useMemo<ActivityRow[]>(() => {
     const allocationsToday = allocations
       .filter(
@@ -266,15 +283,64 @@ function ReportsPage() {
     URL.revokeObjectURL(url);
   };
 
+  const exportPdf = () => {
+    if (!exportRows.length) return;
+
+    const columns = Object.keys(exportRows[0]);
+    const title = `Operational Report - ${TABS.find((item) => item.key === tab)?.label ?? tab}`;
+    const tableHead = columns.map((column) => `<th>${escapeHtml(column)}</th>`).join("");
+    const tableBody = exportRows
+      .map((row) => {
+        const cells = columns.map((column) => `<td>${escapeHtml(row[column] ?? "")}</td>`).join("");
+        return `<tr>${cells}</tr>`;
+      })
+      .join("");
+
+    const printWindow = window.open("", "_blank", "noopener,noreferrer");
+    if (!printWindow) return;
+
+    printWindow.document.write(`<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>${escapeHtml(title)}</title>
+    <style>
+      body { font-family: "Arial", sans-serif; margin: 24px; color: #1f2937; }
+      h1 { margin: 0 0 8px; font-size: 20px; }
+      p { margin: 0 0 18px; color: #4b5563; font-size: 12px; }
+      table { width: 100%; border-collapse: collapse; font-size: 12px; }
+      th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; vertical-align: top; }
+      th { background: #f3f4f6; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <h1>${escapeHtml(title)}</h1>
+    <p>Generated ${escapeHtml(new Date().toLocaleString())}</p>
+    <table>
+      <thead><tr>${tableHead}</tr></thead>
+      <tbody>${tableBody}</tbody>
+    </table>
+  </body>
+</html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
+
   return (
     <div>
       <PageHeader
         title="Reports"
         subtitle="Operational reporting across camps, blocks, tents, housekeeping and maintenance."
         action={
-          <Button onClick={exportCsv} disabled={!exportRows.length}>
-            Export CSV
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={exportPdf} disabled={!exportRows.length}>
+              Export PDF
+            </Button>
+            <Button onClick={exportCsv} disabled={!exportRows.length}>
+              Export CSV
+            </Button>
+          </div>
         }
       />
 
@@ -294,20 +360,42 @@ function ReportsPage() {
       {tab === "occupancy" && (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat label="Occupied beds" value={String(occupiedBeds)} />
-            <Stat label="Available beds" value={String(availableBeds)} />
-            <Stat label="Dirty tents" value={String(dirtyTentCount)} />
-            <Stat label="Maintenance" value={String(openMaintenanceCount)} />
             <Stat label="Occupancy" value={`${rate}%`} />
-            <Stat label="Housekeeping completion" value={`${housekeepingCompletionPct}%`} />
-            <Stat label="Completed cleaning today" value={String(cleaningCompletedToday)} />
-            <Stat label="Today's activity" value={String(todaysActivity.length)} />
+            <Stat label="Staff" value={String(staffOnSiteCount)} />
+            <Stat label="Housekeeping" value={String(housekeepingOpenCount)} />
+            <Stat label="Maintenance" value={String(openMaintenanceCount)} />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Card className="shadow-lodge">
+              <CardHeader>
+                <CardTitle className="font-display text-xl">Camp Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-3 sm:grid-cols-2">
+                <MiniStat label="Camps" value={String(campRows.length)} />
+                <MiniStat label="Available Beds" value={String(availableBeds)} />
+                <MiniStat label="Dirty Rooms" value={String(dirtyTentCount)} />
+                <MiniStat label="Housekeeping %" value={`${housekeepingCompletionPct}%`} />
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-lodge">
+              <CardHeader>
+                <CardTitle className="font-display text-xl">Block Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-3 sm:grid-cols-2">
+                <MiniStat label="Blocks" value={String(blockRows.length)} />
+                <MiniStat label="Occupied Beds" value={String(occupiedBeds)} />
+                <MiniStat label="Today's Cleaning" value={String(cleaningCompletedToday)} />
+                <MiniStat label="Today's Activity" value={String(todaysActivity.length)} />
+              </CardContent>
+            </Card>
           </div>
 
           <div className="grid gap-4 xl:grid-cols-2">
             <Card className="shadow-lodge">
               <CardHeader>
-                <CardTitle className="font-display text-xl">Occupancy by camp</CardTitle>
+                <CardTitle className="font-display text-xl">Camp Summary</CardTitle>
               </CardHeader>
               <CardContent>
                 <DataTable
@@ -326,7 +414,7 @@ function ReportsPage() {
 
             <Card className="shadow-lodge">
               <CardHeader>
-                <CardTitle className="font-display text-xl">Occupancy by block</CardTitle>
+                <CardTitle className="font-display text-xl">Block Summary</CardTitle>
               </CardHeader>
               <CardContent>
                 <DataTable
@@ -466,6 +554,24 @@ function Stat({ label, value }: { label: string; value: string }) {
       </CardContent>
     </Card>
   );
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-lg font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function dt(value: string | null) {
