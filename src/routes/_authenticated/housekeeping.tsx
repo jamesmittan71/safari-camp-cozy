@@ -8,16 +8,22 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { HK_STATUS, useList, useSave, useSoftDelete } from "@/lib/data";
+import { HK_STATUS, today, useList, useSave, useSoftDelete } from "@/lib/data";
 import type { HousekeepingRow, RoomRow, TeamMemberRow } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/housekeeping")({
   head: () => ({
     meta: [
       { title: "Housekeeping — Ten of Cups Camp Manager" },
-      { name: "description", content: "Cleaning queue, progress tracking, history and housekeeping notes." },
+      {
+        name: "description",
+        content: "Cleaning queue, progress tracking, history and housekeeping notes.",
+      },
       { property: "og:title", content: "Housekeeping — Ten of Cups Camp Manager" },
-      { property: "og:description", content: "Track rooms to clean through to ready for occupancy." },
+      {
+        property: "og:description",
+        content: "Track rooms to clean through to ready for occupancy.",
+      },
     ],
   }),
   component: HousekeepingPage,
@@ -25,9 +31,10 @@ export const Route = createFileRoute("/_authenticated/housekeeping")({
 
 function HousekeepingPage() {
   const { canOperate } = useAuth();
+  const day = today();
   const { data: tasks = [], isLoading } = useList<HousekeepingRow>(
     "housekeeping_tasks",
-    "*, rooms(room_number, buildings(name)), team_members(name, surname)",
+    "*, rooms(room_number, buildings(name, camps(name))), team_members(name, surname)",
   );
   const { data: rooms = [] } = useList<RoomRow>("rooms", "*, buildings(name)", "room_number");
   const { data: staff = [] } = useList<TeamMemberRow>("team_members", "*", "surname");
@@ -41,6 +48,13 @@ function HousekeepingPage() {
     ...s,
     count: tasks.filter((t) => t.status === s.value).length,
   }));
+
+  const todaysCleaning = tasks.filter((task) => {
+    const createdToday = task.created_at?.slice(0, 10) === day;
+    const startedToday = task.started_at?.slice(0, 10) === day;
+    const completedToday = task.completed_at?.slice(0, 10) === day;
+    return createdToday || startedToday || completedToday;
+  });
 
   const advance = (task: HousekeepingRow) => {
     const now = new Date().toISOString();
@@ -61,7 +75,12 @@ function HousekeepingPage() {
         subtitle="From rooms to clean through to ready for occupancy."
         action={
           canOperate ? (
-            <Button onClick={() => { setEditing(undefined); setOpen(true); }}>
+            <Button
+              onClick={() => {
+                setEditing(undefined);
+                setOpen(true);
+              }}
+            >
               <Plus className="size-4" /> New cleaning task
             </Button>
           ) : null
@@ -79,6 +98,32 @@ function HousekeepingPage() {
         ))}
       </div>
 
+      <div className="mb-6">
+        <h2 className="mb-3 font-display text-2xl">Today's Cleaning</h2>
+        <DataTable<HousekeepingRow>
+          rows={todaysCleaning}
+          empty="No cleaning updates recorded today."
+          columns={[
+            { key: "camp", label: "Camp", render: (r) => r.rooms?.buildings?.camps?.name ?? "—" },
+            { key: "block", label: "Block", render: (r) => r.rooms?.buildings?.name ?? "—" },
+            { key: "tent", label: "Tent", render: (r) => r.rooms?.room_number ?? "—" },
+            {
+              key: "assigned_cleaner",
+              label: "Assigned Cleaner",
+              render: (r) =>
+                r.team_members ? `${r.team_members.name} ${r.team_members.surname}` : "—",
+            },
+            { key: "status", label: "Status", render: (r) => <StatusBadge value={r.status} /> },
+            {
+              key: "completed",
+              label: "Completed",
+              render: (r) =>
+                r.completed_at || r.status === "complete" || r.status === "ready" ? "Yes" : "No",
+            },
+          ]}
+        />
+      </div>
+
       <DataTable<HousekeepingRow>
         loading={isLoading}
         rows={tasks}
@@ -90,7 +135,8 @@ function HousekeepingPage() {
           {
             key: "assigned",
             label: "Assigned to",
-            render: (r) => (r.team_members ? `${r.team_members.name} ${r.team_members.surname}` : "—"),
+            render: (r) =>
+              r.team_members ? `${r.team_members.name} ${r.team_members.surname}` : "—",
           },
           { key: "started_at", label: "Started", render: (r) => fmt(r.started_at) },
           { key: "completed_at", label: "Completed", render: (r) => fmt(r.completed_at) },
@@ -101,12 +147,23 @@ function HousekeepingPage() {
             ? (r) =>
                 r.status === "ready" ? null : (
                   <Button size="sm" variant="secondary" onClick={() => advance(r)}>
-                    {r.status === "to_clean" ? "Start" : r.status === "in_progress" ? "Complete" : "Mark ready"}
+                    {r.status === "to_clean"
+                      ? "Start"
+                      : r.status === "in_progress"
+                        ? "Complete"
+                        : "Mark ready"}
                   </Button>
                 )
             : undefined
         }
-        onEdit={canOperate ? (r) => { setEditing({ ...r } as RecordValues); setOpen(true); } : undefined}
+        onEdit={
+          canOperate
+            ? (r) => {
+                setEditing({ ...r } as RecordValues);
+                setOpen(true);
+              }
+            : undefined
+        }
         onDelete={canOperate ? (r) => remove.mutate(r.id) : undefined}
       />
 
@@ -122,7 +179,10 @@ function HousekeepingPage() {
             label: "Room",
             type: "select",
             required: true,
-            options: rooms.map((r) => ({ value: r.id, label: `${r.room_number} — ${r.buildings?.name ?? ""}` })),
+            options: rooms.map((r) => ({
+              value: r.id,
+              label: `${r.room_number} — ${r.buildings?.name ?? ""}`,
+            })),
           },
           { name: "status", label: "Status", type: "select", options: HK_STATUS },
           {

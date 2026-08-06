@@ -62,7 +62,10 @@ export type AllocationRow = {
   department: string | null;
   comments: string | null;
   status: string;
-  rooms?: { room_number: string; buildings?: { name: string; camps?: { name: string } | null } | null } | null;
+  rooms?: {
+    room_number: string;
+    buildings?: { name: string; camps?: { name: string } | null } | null;
+  } | null;
 };
 
 export type HousekeepingRow = {
@@ -74,7 +77,10 @@ export type HousekeepingRow = {
   completed_at: string | null;
   notes: string | null;
   created_at: string;
-  rooms?: { room_number: string; buildings?: { name: string } | null } | null;
+  rooms?: {
+    room_number: string;
+    buildings?: { name: string; camps?: { name: string } | null } | null;
+  } | null;
   team_members?: { name: string; surname: string } | null;
 };
 
