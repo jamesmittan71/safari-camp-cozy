@@ -42,3 +42,4 @@ jobs:
           name: node-production-artifact
           path: .output
           if-no-files-found: error
+          include-hidden-files: true
