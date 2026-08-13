@@ -1,0 +1,44 @@
+name: Production stabilization CI
+
+on:
+  push:
+    branches: [stabilize/cpanel-production]
+  pull_request:
+    branches: [main, stabilize/cpanel-production]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.20.2
+          cache: npm
+      - run: node --version | grep -Fx v20.20.2
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npm test
+      - run: npm run validate:migrations
+      - run: npx supabase@2.39.2 start
+      - run: npx supabase@2.39.2 db reset --local
+      - run: npx supabase@2.39.2 db lint --local
+      - run: npm run build
+      - run: PORT=3100 npm start > server.log 2>&1 & echo $! > server.pid
+      - run: curl --fail --retry 15 --retry-connrefused http://127.0.0.1:3100/health | grep -F '"status":"ok"'
+      - run: kill $(cat server.pid)
+        if: always()
+      - run: PORT=3101 node app.js > passenger.log 2>&1 & echo $! > passenger.pid
+      - run: curl --fail --retry 15 --retry-connrefused http://127.0.0.1:3101/health | grep -F '"status":"ok"'
+      - run: kill $(cat passenger.pid)
+        if: always()
+      - uses: actions/upload-artifact@v4
+        with:
+          name: node-production-artifact
+          path: .output
+          if-no-files-found: error

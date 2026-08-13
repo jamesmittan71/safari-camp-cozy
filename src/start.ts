@@ -25,7 +25,14 @@ const csrfMiddleware = createCsrfMiddleware({
   filter: (ctx) => ctx.handlerType === "serverFn",
 });
 
+const healthMiddleware = createMiddleware().server(({ pathname, next }) => {
+  if (pathname === "/health") {
+    return Response.json({ status: "ok" });
+  }
+  return next();
+});
+
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth],
-  requestMiddleware: [errorMiddleware, csrfMiddleware],
+  requestMiddleware: [healthMiddleware, errorMiddleware, csrfMiddleware],
 }));

@@ -14,7 +14,10 @@ export const Route = createFileRoute("/_authenticated/buildings")({
   head: () => ({
     meta: [
       { title: "Buildings — Ten of Cups Camp Manager" },
-      { name: "description", content: "Manage the buildings that make up each camp on the game farm." },
+      {
+        name: "description",
+        content: "Manage the buildings that make up each camp on the game farm.",
+      },
       { property: "og:title", content: "Buildings — Ten of Cups Camp Manager" },
       { property: "og:description", content: "Building register per camp with status tracking." },
     ],
@@ -38,7 +41,12 @@ function BuildingsPage() {
         subtitle="Every building belongs to a camp and holds its rooms."
         action={
           canManage ? (
-            <Button onClick={() => { setEditing(undefined); setOpen(true); }}>
+            <Button
+              onClick={() => {
+                setEditing(undefined);
+                setOpen(true);
+              }}
+            >
               <Plus className="size-4" /> New building
             </Button>
           ) : null
@@ -54,7 +62,14 @@ function BuildingsPage() {
           { key: "description", label: "Description" },
           { key: "status", label: "Status", render: (r) => <StatusBadge value={r.status} /> },
         ]}
-        onEdit={canManage ? (r) => { setEditing({ ...r } as unknown as RecordValues); setOpen(true); } : undefined}
+        onEdit={
+          canManage
+            ? (r) => {
+                setEditing({ ...r } as unknown as RecordValues);
+                setOpen(true);
+              }
+            : undefined
+        }
         onDelete={canManage ? (r) => remove.mutate(r.id) : undefined}
       />
 

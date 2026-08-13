@@ -8,7 +8,10 @@ export const Route = createFileRoute("/_authenticated/calendar")({
   head: () => ({
     meta: [
       { title: "Occupancy Calendar — Ten of Cups Camp Manager" },
-      { name: "description", content: "Monthly occupancy calendar with colour-coded room availability." },
+      {
+        name: "description",
+        content: "Monthly occupancy calendar with colour-coded room availability.",
+      },
       { property: "og:title", content: "Occupancy Calendar — Ten of Cups Camp Manager" },
       { property: "og:description", content: "See camp occupancy day by day across the month." },
     ],

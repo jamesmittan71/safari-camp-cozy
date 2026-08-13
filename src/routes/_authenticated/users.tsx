@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useList } from "@/lib/data";
 import type { ProfileRow, UserRoleRow } from "@/lib/types";
 
@@ -14,7 +15,11 @@ export const Route = createFileRoute("/_authenticated/users")({
   head: () => ({
     meta: [
       { title: "User Access — Ten of Cups Camp Manager" },
-      { name: "description", content: "Assign administrator, manager, housekeeping and read-only access to staff accounts." },
+      {
+        name: "description",
+        content:
+          "Assign administrator, manager, housekeeping and read-only access to staff accounts.",
+      },
       { property: "og:title", content: "User Access — Ten of Cups Camp Manager" },
       { property: "og:description", content: "Role-based access control for the camp manager." },
     ],
@@ -23,6 +28,7 @@ export const Route = createFileRoute("/_authenticated/users")({
 });
 
 const ROLES = ["administrator", "manager", "housekeeping", "read_only"] as const;
+type AppRole = Database["public"]["Enums"]["app_role"];
 const LABEL: Record<string, string> = {
   administrator: "Administrator",
   manager: "Manager",
@@ -38,11 +44,12 @@ function UsersPage() {
   const { data: roles = [] } = useList<UserRoleRow>("user_roles", "*", "role");
 
   const toggle = useMutation({
-    mutationFn: async ({ userId, role, has }: { userId: string; role: string; has: boolean }) => {
-      const table = supabase.from("user_roles");
-      const { error } = has
-        ? await table.delete().eq("user_id", userId).eq("role", role as never)
-        : await table.insert({ user_id: userId, role: role as never });
+    mutationFn: async ({ userId, role, has }: { userId: string; role: AppRole; has: boolean }) => {
+      const { error } = await supabase.rpc("admin_set_user_role", {
+        target_user_id: userId,
+        target_role: role,
+        grant_role: !has,
+      });
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
