@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/AppShell";
 import { DataTable } from "@/components/DataTable";
 import { RecordDialog, type RecordValues } from "@/components/RecordDialog";
 import { StatusBadge } from "@/components/StatusBadge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -81,9 +82,13 @@ function Stat({
 
 function HousekeepingPage() {
   const { canOperate } = useAuth();
-  const { data: tasks = [], isLoading } = useList<HousekeepingRow>(
+  const {
+    data: tasks = [],
+    isLoading,
+    error,
+  } = useList<HousekeepingRow>(
     "housekeeping_tasks",
-    "*, rooms(room_number, buildings(name, camps(name))), team_members(name, surname)",
+    "*, rooms(room_number, buildings(name, camps(name))), team_members:team_members!housekeeping_tasks_assigned_to_fkey(name, surname)",
   );
   const { data: rooms = [] } = useList<RoomRow>(
     "rooms",
@@ -304,6 +309,14 @@ function HousekeepingPage() {
           </Button>
         )}
       </div>
+
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="size-4" />
+          <AlertTitle>Could not load cleaning tasks</AlertTitle>
+          <AlertDescription>{error.message}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Work queue table */}
       <DataTable<HousekeepingRow>

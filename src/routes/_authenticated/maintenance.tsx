@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/AppShell";
 import { DataTable } from "@/components/DataTable";
 import { RecordDialog, type RecordValues } from "@/components/RecordDialog";
 import { StatusBadge } from "@/components/StatusBadge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -93,9 +94,13 @@ function Stat({
 
 function MaintenancePage() {
   const { canOperate } = useAuth();
-  const { data: reports = [], isLoading } = useList<MaintenanceRow>(
+  const {
+    data: reports = [],
+    isLoading,
+    error,
+  } = useList<MaintenanceRow>(
     "maintenance_reports",
-    "*, rooms(room_number, buildings(name, camps(name))), reporter:reported_by(name, surname), technician:assigned_to(name, surname)",
+    "*, rooms(room_number, buildings(name, camps(name))), reporter:team_members!maintenance_reports_reported_by_fkey(name, surname), technician:team_members!maintenance_reports_assigned_to_fkey(name, surname)",
   );
   const { data: rooms = [] } = useList<RoomRow>(
     "rooms",
@@ -367,6 +372,14 @@ function MaintenancePage() {
           </Button>
         )}
       </div>
+
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="size-4" />
+          <AlertTitle>Could not load work orders</AlertTitle>
+          <AlertDescription>{error.message}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Work order queue */}
       <DataTable<MaintenanceRow>

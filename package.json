@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "start": "node .output/server/index.mjs",
-    "test": "node --test tests",
+    "test": "node --test \"tests/*.test.mjs\"",
     "validate:migrations": "node scripts/validate-migrations.mjs",
     "lint": "eslint .",
     "format": "prettier --write ."
