@@ -149,13 +149,13 @@ function Dashboard() {
   );
   const { data: tasks = [] } = useList<HousekeepingRow>(
     "housekeeping_tasks",
-    "*, rooms(room_number, buildings(name, camps(name))), team_members(name, surname)",
+    "*, rooms(room_number, buildings(name, camps(name))), team_members:team_members!housekeeping_tasks_assigned_to_fkey(name, surname)",
     "created_at",
     { refetchInterval: REFRESH_MS },
   );
   const { data: reports = [] } = useList<MaintenanceRow>(
     "maintenance_reports",
-    "*, rooms(room_number, buildings(name, camps(name))), reporter:reported_by(name, surname), technician:assigned_to(name, surname)",
+    "*, rooms(room_number, buildings(name, camps(name))), technician:team_members!maintenance_reports_assigned_to_fkey(name, surname)",
     "created_at",
     { refetchInterval: REFRESH_MS },
   );
