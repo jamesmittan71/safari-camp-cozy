@@ -100,7 +100,7 @@ function MaintenancePage() {
     error,
   } = useList<MaintenanceRow>(
     "maintenance_reports",
-    "*, rooms(room_number, buildings(name, camps(name))), reporter:team_members!maintenance_reports_reported_by_fkey(name, surname), technician:team_members!maintenance_reports_assigned_to_fkey(name, surname)",
+    "*, rooms(room_number, buildings(name, camps(name))), technician:team_members!maintenance_reports_assigned_to_fkey(name, surname)",
   );
   const { data: rooms = [] } = useList<RoomRow>(
     "rooms",
