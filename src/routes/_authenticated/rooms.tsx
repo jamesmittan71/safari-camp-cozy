@@ -1,10 +1,20 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/AppShell";
 import { RecordDialog, type RecordValues } from "@/components/RecordDialog";
 import { StatusBadge } from "@/components/StatusBadge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -139,6 +149,7 @@ function RoomsPage() {
   const saveAllocation = useSave("allocations", "Allocation");
   const saveRoom = useSave("rooms", "Room");
   const deleteAllocation = useSoftDelete("allocations", "Allocation");
+  const deleteRoom = useSoftDelete("rooms", "Tent");
   const insertHistory = useInsert("allocation_history", "History");
 
   const [campFilter, setCampFilter] = useState("");
@@ -149,6 +160,7 @@ function RoomsPage() {
 
   const [roomOpen, setRoomOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<RecordValues | undefined>();
+  const [roomToDelete, setRoomToDelete] = useState<RoomRow | null>(null);
 
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignTarget, setAssignTarget] = useState<{ room: RoomRow; bed: "A" | "B" } | null>(null);
@@ -557,6 +569,7 @@ function RoomsPage() {
               setEditingRoom({ ...currentRoom } as RecordValues);
               setRoomOpen(true);
             }}
+            onDelete={setRoomToDelete}
             onAssign={handleAssignOpen}
             onRemoveBed={handleRemoveBed}
             onCheckIn={handleCheckIn}
@@ -619,6 +632,36 @@ function RoomsPage() {
         }
       />
 
+      <AlertDialog
+        open={Boolean(roomToDelete)}
+        onOpenChange={(open) => {
+          if (!open) setRoomToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove tent {roomToDelete?.room_number}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This hides the tent from normal operations. Existing allocation and history records
+              will be retained.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteRoom.isPending}
+              onClick={() => {
+                if (roomToDelete) deleteRoom.mutate(roomToDelete.id);
+                setRoomToDelete(null);
+              }}
+            >
+              Remove tent
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <RecordDialog
         open={assignOpen}
         onOpenChange={(open) => {
@@ -667,6 +710,7 @@ interface TentCardProps {
   canOperate: boolean;
   canManage: boolean;
   onEdit: (room: RoomRow) => void;
+  onDelete: (room: RoomRow) => void;
   onAssign: (room: RoomRow, bed: "A" | "B") => void;
   onRemoveBed: (allocation: AllocationRow, bed: "A" | "B") => void;
   onCheckIn: (allocation: AllocationRow) => void;
@@ -682,6 +726,7 @@ function TentCard({
   canOperate,
   canManage,
   onEdit,
+  onDelete,
   onAssign,
   onRemoveBed,
   onCheckIn,
@@ -782,9 +827,20 @@ function TentCard({
         ) : null}
 
         {canManage ? (
-          <Button size="sm" variant="ghost" className="w-full" onClick={() => onEdit(room)}>
-            Edit tent details
-          </Button>
+          <div className="flex gap-2 pt-1">
+            <Button size="sm" variant="ghost" className="flex-1" onClick={() => onEdit(room)}>
+              Edit tent details
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label={`Remove tent ${room.room_number}`}
+              className="text-destructive hover:text-destructive"
+              onClick={() => onDelete(room)}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </div>
         ) : null}
       </CardContent>
     </Card>
