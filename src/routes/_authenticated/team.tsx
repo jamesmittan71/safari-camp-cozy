@@ -317,7 +317,7 @@ function TeamPage() {
           canManage ? (
             <Button
               onClick={() => {
-                setEditing(undefined);
+                setEditing({ is_contractor: "false", accommodation_rate: null });
                 setEditOpen(true);
               }}
             >
@@ -406,6 +406,11 @@ function TeamPage() {
             ),
           },
           {
+            key: "is_contractor",
+            label: "Type",
+            render: (r) => (r.is_contractor ? <Badge variant="outline">Contractor</Badge> : null),
+          },
+          {
             key: "allocation",
             label: "Allocated to",
             render: (r) => {
@@ -424,7 +429,10 @@ function TeamPage() {
         onEdit={
           canManage
             ? (r) => {
-                setEditing({ ...r } as RecordValues);
+                setEditing({
+                  ...r,
+                  is_contractor: r.is_contractor ? "true" : "false",
+                } as RecordValues);
                 setEditOpen(true);
               }
             : undefined
@@ -537,7 +545,10 @@ function TeamPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        setEditing({ ...selectedMember } as RecordValues);
+                        setEditing({
+                          ...selectedMember,
+                          is_contractor: selectedMember.is_contractor ? "true" : "false",
+                        } as RecordValues);
                         setEditOpen(true);
                       }}
                     >
@@ -696,6 +707,22 @@ function TeamPage() {
           },
           { name: "date_joined", label: "Date joined", type: "date" },
           { name: "vehicle_registration", label: "Vehicle registration" },
+          {
+            name: "is_contractor",
+            label: "Contractor",
+            type: "select",
+            options: [
+              { value: "false", label: "No" },
+              { value: "true", label: "Yes" },
+            ],
+          },
+          {
+            name: "accommodation_rate",
+            label: "Accommodation rate (per night)",
+            type: "number",
+            step: "0.01",
+            placeholder: "0.00",
+          },
           { name: "notes", label: "Notes", type: "textarea" },
         ]}
         onSubmit={(values) =>
@@ -714,6 +741,13 @@ function TeamPage() {
               employment_status: values.employment_status || "active",
               date_joined: values.date_joined,
               vehicle_registration: values.vehicle_registration,
+              is_contractor: values.is_contractor === true || values.is_contractor === "true",
+              accommodation_rate:
+                values.is_contractor === true || values.is_contractor === "true"
+                  ? values.accommodation_rate == null || values.accommodation_rate === ""
+                    ? null
+                    : Number(values.accommodation_rate)
+                  : null,
               notes: values.notes,
             },
             {

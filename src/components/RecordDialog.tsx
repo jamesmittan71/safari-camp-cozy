@@ -26,6 +26,7 @@ export type Field = {
   options?: { value: string; label: string }[];
   required?: boolean;
   placeholder?: string;
+  step?: string;
   full?: boolean;
 };
 
@@ -120,6 +121,7 @@ export function RecordDialog({
                           : "text"
                   }
                   required={f.required}
+                  step={f.step}
                   placeholder={f.placeholder}
                   value={(values[f.name] as string) ?? ""}
                   onChange={(e) => set(f.name, e.target.value)}
