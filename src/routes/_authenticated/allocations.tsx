@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Plus, LogIn, LogOut, Bed } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { DataTable } from "@/components/DataTable";
 import { RecordDialog, type RecordValues } from "@/components/RecordDialog";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { isActiveOn, today, useList, useSave, useSoftDelete } from "@/lib/data";
@@ -48,6 +49,7 @@ function AllocationsPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RecordValues | undefined>();
   const [search, setSearch] = useState("");
+  const [opsDate, setOpsDate] = useState(today());
 
   const day = today();
   const memberOptions = members.map((m) => ({ value: m.id, label: `${m.name} ${m.surname}` }));
@@ -59,6 +61,36 @@ function AllocationsPage() {
         return hay.toLowerCase().includes(search.toLowerCase());
       }),
     [allocations, search],
+  );
+
+  // Operations view: filter by selected date
+  const arrivalsToday = useMemo(
+    () =>
+      allocations.filter(
+        (a) => a.arrival_date === opsDate && a.status !== "cancelled" && a.status !== "checked_out",
+      ),
+    [allocations, opsDate],
+  );
+
+  const departuresToday = useMemo(
+    () =>
+      allocations.filter(
+        (a) =>
+          a.departure_date === opsDate && a.status !== "cancelled" && a.status !== "checked_out",
+      ),
+    [allocations, opsDate],
+  );
+
+  const stayovers = useMemo(
+    () =>
+      allocations.filter(
+        (a) =>
+          isActiveOn(a, opsDate) &&
+          a.arrival_date < opsDate &&
+          a.departure_date > opsDate &&
+          a.status !== "cancelled",
+      ),
+    [allocations, opsDate],
   );
 
   return (
@@ -79,6 +111,121 @@ function AllocationsPage() {
           ) : null
         }
       />
+
+      {/* Today's Operations View */}
+      <div className="mb-8">
+        <div className="mb-4 flex items-center gap-4">
+          <label className="text-sm font-medium">Operations Date:</label>
+          <input
+            type="date"
+            value={opsDate}
+            onChange={(e) => setOpsDate(e.target.value)}
+            className="rounded border px-3 py-2 text-sm"
+          />
+          <button
+            onClick={() => setOpsDate(today())}
+            className="text-xs underline text-blue-600 hover:text-blue-700"
+          >
+            Back to today
+          </button>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Arrivals */}
+          <Card className="shadow-lodge">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <LogIn className="size-4 text-green-600" />
+                Arrivals ({arrivalsToday.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {arrivalsToday.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No arrivals scheduled</p>
+              ) : (
+                <ul className="space-y-2">
+                  {arrivalsToday.map((a) => (
+                    <li key={a.id} className="rounded bg-green-50 p-2 text-sm">
+                      <div className="font-medium">{a.rooms?.room_number}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {a.bed_a_name || a.bed_b_name
+                          ? `${a.bed_a_name || ""} ${a.bed_b_name || ""}`.trim()
+                          : "No guests"}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {a.rooms?.buildings?.camps?.name}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Departures */}
+          <Card className="shadow-lodge">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <LogOut className="size-4 text-red-600" />
+                Departures ({departuresToday.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {departuresToday.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No departures scheduled</p>
+              ) : (
+                <ul className="space-y-2">
+                  {departuresToday.map((a) => (
+                    <li key={a.id} className="rounded bg-red-50 p-2 text-sm">
+                      <div className="font-medium">{a.rooms?.room_number}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {a.bed_a_name || a.bed_b_name
+                          ? `${a.bed_a_name || ""} ${a.bed_b_name || ""}`.trim()
+                          : "No guests"}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {a.rooms?.buildings?.camps?.name}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Stayovers */}
+          <Card className="shadow-lodge">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Bed className="size-4 text-blue-600" />
+                Stayovers ({stayovers.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {stayovers.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No guests in-house</p>
+              ) : (
+                <ul className="space-y-2">
+                  {stayovers.map((a) => (
+                    <li key={a.id} className="rounded bg-blue-50 p-2 text-sm">
+                      <div className="font-medium">{a.rooms?.room_number}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {a.bed_a_name || a.bed_b_name
+                          ? `${a.bed_a_name || ""} ${a.bed_b_name || ""}`.trim()
+                          : "No guests"}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {a.rooms?.buildings?.camps?.name}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
       <Input
         className="mb-4 max-w-sm"
         placeholder="Search by room, guest or department…"

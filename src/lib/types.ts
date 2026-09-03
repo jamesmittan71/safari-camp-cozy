@@ -52,6 +52,8 @@ export type TeamMemberRow = {
   employment_status: string;
   date_joined: string | null;
   notes: string | null;
+  is_contractor: boolean;
+  accommodation_rate: number | null;
 };
 
 export type StaffAllocationHistoryRow = {
@@ -109,6 +111,8 @@ export type HousekeepingRow = {
   inspection_notes: string | null;
   inspected_by: string | null;
   created_at: string;
+  updated_at?: string | null;
+  deleted_at?: string | null;
   rooms?: {
     room_number: string;
     buildings?: { name: string; camps?: { name: string } | null } | null;

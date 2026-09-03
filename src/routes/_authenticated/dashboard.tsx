@@ -201,6 +201,11 @@ function Dashboard() {
   );
   const taskMap = useMemo(() => new Map(tasks.map((task) => [task.id, task])), [tasks]);
   const reportMap = useMemo(() => new Map(reports.map((report) => [report.id, report])), [reports]);
+  // maintenance_reports.reported_by has no foreign key, so resolve the name client-side.
+  const memberMap = useMemo(
+    () => new Map(members.map((member) => [member.id, `${member.name} ${member.surname}`])),
+    [members],
+  );
 
   const activeAllocations = useMemo(
     () => allocations.filter((allocation) => isActiveOn(allocation, day)),
@@ -487,7 +492,7 @@ function Dashboard() {
       items.push({
         id: `maintenance-report-${report.id}`,
         timestamp: report.created_at,
-        user: report.reporter ? `${report.reporter.name} ${report.reporter.surname}` : "System",
+        user: formatUser(memberMap.get(report.reported_by ?? "")),
         action: "Maintenance Reported",
         tent: report.rooms?.room_number ?? "—",
         camp: report.rooms?.buildings?.camps?.name ?? "—",
@@ -513,6 +518,7 @@ function Dashboard() {
     allocations,
     day,
     housekeepingHistory,
+    memberMap,
     profileMap,
     reportMap,
     reports,

@@ -10,6 +10,9 @@ import {
   Plus,
   Sparkles,
   Wrench,
+  Zap,
+  LogOut,
+  LogIn,
 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { DataTable } from "@/components/DataTable";
@@ -27,8 +30,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
-import { HK_PRIORITY, HK_STATUS, today, useList, useSave, useSoftDelete } from "@/lib/data";
-import type { HousekeepingHistoryRow, HousekeepingRow, RoomRow, TeamMemberRow } from "@/lib/types";
+import {
+  HK_PRIORITY,
+  HK_STATUS,
+  today,
+  useList,
+  useSave,
+  useSoftDelete,
+  isActiveOn,
+} from "@/lib/data";
+import type {
+  HousekeepingHistoryRow,
+  HousekeepingRow,
+  RoomRow,
+  TeamMemberRow,
+  AllocationRow,
+} from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/housekeeping")({
   head: () => ({
@@ -96,6 +113,11 @@ function HousekeepingPage() {
     "room_number",
   );
   const { data: staff = [] } = useList<TeamMemberRow>("team_members", "*", "surname");
+  const { data: allocations = [] } = useList<AllocationRow>(
+    "allocations",
+    "*, rooms(room_number, buildings(name, camps(name)))",
+    "arrival_date",
+  );
   const save = useSave("housekeeping_tasks", "Cleaning task");
   const remove = useSoftDelete("housekeeping_tasks", "Cleaning task");
 
@@ -112,6 +134,69 @@ function HousekeepingPage() {
 
   // History modal
   const [historyTaskId, setHistoryTaskId] = useState<string | null>(null);
+
+  const todayStr = today();
+
+  // Generate housekeeping suggestions from allocations
+  const suggestions = useMemo(() => {
+    const sugg: Array<{
+      id: string;
+      type: "departure" | "arrival";
+      room_id: string;
+      room_number: string;
+      camp_name: string;
+      building_name: string;
+      guest_name: string;
+      allocation_id: string;
+    }> = [];
+
+    // Departures → suggest "dirty" or "scheduled" for cleaning
+    const departuresToday = allocations.filter(
+      (a) => a.departure_date === todayStr && a.status !== "cancelled",
+    );
+    for (const alloc of departuresToday) {
+      // Only suggest if no active housekeeping task for this room with status dirty/scheduled/in_progress
+      const hasActiveTask = tasks.some(
+        (t) =>
+          t.room_id === alloc.room_id && ["dirty", "scheduled", "in_progress"].includes(t.status),
+      );
+      if (!hasActiveTask && alloc.room_id) {
+        sugg.push({
+          id: `depart-${alloc.id}`,
+          type: "departure",
+          room_id: alloc.room_id,
+          room_number: alloc.rooms?.room_number ?? "—",
+          camp_name: alloc.rooms?.buildings?.camps?.name ?? "—",
+          building_name: alloc.rooms?.buildings?.name ?? "—",
+          guest_name: `${alloc.bed_a_name || ""} ${alloc.bed_b_name || ""}`.trim() || "Unknown",
+          allocation_id: alloc.id,
+        });
+      }
+    }
+
+    // Arrivals → suggest "prepared" or initial status for setup
+    const arrivalsToday = allocations.filter(
+      (a) => a.arrival_date === todayStr && a.status !== "cancelled",
+    );
+    for (const alloc of arrivalsToday) {
+      // Only suggest if no task exists already for this room
+      const hasTask = tasks.some((t) => t.room_id === alloc.room_id && !t.deleted_at);
+      if (!hasTask && alloc.room_id) {
+        sugg.push({
+          id: `arrive-${alloc.id}`,
+          type: "arrival",
+          room_id: alloc.room_id,
+          room_number: alloc.rooms?.room_number ?? "—",
+          camp_name: alloc.rooms?.buildings?.camps?.name ?? "—",
+          building_name: alloc.rooms?.buildings?.name ?? "—",
+          guest_name: `${alloc.bed_a_name || ""} ${alloc.bed_b_name || ""}`.trim() || "Unknown",
+          allocation_id: alloc.id,
+        });
+      }
+    }
+
+    return sugg;
+  }, [allocations, tasks, todayStr]);
 
   const camps = useMemo(() => {
     const seen = new Set<string>();
@@ -136,7 +221,16 @@ function HousekeepingPage() {
       if (filterOverdue && !isOverdue(t)) return false;
       return true;
     });
-  }, [tasks, filterCamp, filterStatus, filterPriority, filterCleaner, filterToday, filterOverdue]);
+  }, [
+    tasks,
+    filterCamp,
+    filterStatus,
+    filterPriority,
+    filterCleaner,
+    filterToday,
+    filterOverdue,
+    todayStr,
+  ]);
 
   // Quick actions
   const advance = (task: HousekeepingRow) => {
@@ -183,6 +277,67 @@ function HousekeepingPage() {
           ) : null
         }
       />
+
+      {/* Housekeeping Suggestions from Allocations */}
+      {suggestions.length > 0 && (
+        <Card className="mb-6 border-amber-200 bg-amber-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Zap className="size-4 text-amber-600" />
+                <h3 className="font-semibold text-amber-900">
+                  Suggested Tasks ({suggestions.length})
+                </h3>
+              </div>
+              <p className="text-xs text-amber-700">Auto-generated from today&apos;s allocations</p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {suggestions.map((sugg) => (
+                <div
+                  key={sugg.id}
+                  className="rounded border border-amber-200 bg-white p-3 flex items-center justify-between"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      {sugg.type === "departure" ? (
+                        <LogOut className="size-3 text-red-600" />
+                      ) : (
+                        <LogIn className="size-3 text-green-600" />
+                      )}
+                      <span className="font-medium text-sm">{sugg.room_number}</span>
+                      <span className="text-xs text-muted-foreground">({sugg.camp_name})</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {sugg.type === "departure" ? "Checkout: " : "Check-in: "}
+                      {sugg.guest_name}
+                    </div>
+                    <div className="text-xs text-muted-foreground">{sugg.building_name}</div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      save.mutate({
+                        room_id: sugg.room_id,
+                        status: sugg.type === "departure" ? "dirty" : "dirty",
+                        priority: sugg.type === "departure" ? "high" : "normal",
+                        date_assigned: todayStr,
+                        assigned_to: null,
+                        notes:
+                          sugg.type === "departure"
+                            ? `Post-departure cleaning for ${sugg.guest_name}`
+                            : `Pre-arrival preparation for ${sugg.guest_name}`,
+                      });
+                    }}
+                  >
+                    Create
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Dashboard summary */}
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">

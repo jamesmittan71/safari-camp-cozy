@@ -49,6 +49,7 @@ const TABS = [
   { key: "daily-operations", label: "Daily Operations" },
   { key: "weekly-movements", label: "Weekly Movements" },
   { key: "open-maintenance", label: "Open Maintenance" },
+  { key: "contractor-billing", label: "Contractor Billing" },
 ];
 
 const OPEN_MAINTENANCE_STATUSES = new Set(
@@ -66,6 +67,14 @@ function ReportsPage() {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [technicianFilter, setTechnicianFilter] = useState("all");
   const [overdueOnly, setOverdueOnly] = useState(false);
+  // Contractor billing filters
+  const [billingStartDate, setBillingStartDate] = useState(() => {
+    const d = new Date(day);
+    d.setDate(1);
+    return d.toISOString().slice(0, 10);
+  });
+  const [billingEndDate, setBillingEndDate] = useState(day);
+  const [billingCampFilter, setBillingCampFilter] = useState("all");
 
   const { data: rooms = [], error: roomsError } = useList<RoomRow>(
     "rooms",
@@ -140,6 +149,91 @@ function ReportsPage() {
     ],
     [maintenance],
   );
+
+  // Contractor billing report data
+  const contractorBillingRows = useMemo(() => {
+    const contractors = staff.filter((s) => s.is_contractor);
+    const rows: Array<{
+      id: string;
+      contractor_name: string;
+      camp_name: string;
+      room_number: string;
+      arrival_date: string;
+      departure_date: string;
+      nights: number;
+      rate_per_night: number;
+      line_total: number;
+      allocation_id: string;
+    }> = [];
+
+    for (const contractor of contractors) {
+      // Find allocations for this contractor in the date range
+      const contractorAllocations = allocations.filter(
+        (a) =>
+          (a.bed_a === contractor.id || a.bed_b === contractor.id) &&
+          a.status !== "cancelled" &&
+          // Allocation overlaps with billing period
+          a.arrival_date <= billingEndDate &&
+          a.departure_date > billingStartDate,
+      );
+
+      for (const alloc of contractorAllocations) {
+        // Calculate nights: intersection of allocation and billing period
+        const actualStart =
+          alloc.arrival_date < billingStartDate ? billingStartDate : alloc.arrival_date;
+        const actualEnd =
+          alloc.departure_date > billingEndDate ? billingEndDate : alloc.departure_date;
+
+        const startDate = new Date(`${actualStart}T00:00:00`);
+        const endDate = new Date(`${actualEnd}T00:00:00`);
+        const nights = Math.max(
+          0,
+          Math.floor((endDate.getTime() - startDate.getTime()) / 86_400_000),
+        );
+
+        if (nights > 0 && contractor.accommodation_rate) {
+          // Filter by camp if specified
+          const campName = alloc.rooms?.buildings?.camps?.name ?? "—";
+          if (billingCampFilter !== "all" && campName !== billingCampFilter) {
+            continue;
+          }
+
+          rows.push({
+            id: alloc.id,
+            contractor_name: `${contractor.name} ${contractor.surname}`,
+            camp_name: campName,
+            room_number: alloc.rooms?.room_number ?? "—",
+            arrival_date: alloc.arrival_date,
+            departure_date: alloc.departure_date,
+            nights,
+            rate_per_night: contractor.accommodation_rate,
+            line_total: nights * contractor.accommodation_rate,
+            allocation_id: alloc.id,
+          });
+        }
+      }
+    }
+
+    return rows;
+  }, [allocations, staff, billingStartDate, billingEndDate, billingCampFilter]);
+
+  const contractorBillingTotal = useMemo(
+    () => contractorBillingRows.reduce((sum, row) => sum + row.line_total, 0),
+    [contractorBillingRows],
+  );
+
+  const billingCamps = useMemo(() => {
+    const seen = new Set<string>();
+    const list: string[] = [];
+    for (const alloc of allocations) {
+      const camp = alloc.rooms?.buildings?.camps?.name;
+      if (camp && !seen.has(camp)) {
+        seen.add(camp);
+        list.push(camp);
+      }
+    }
+    return list;
+  }, [allocations]);
 
   return (
     <div>
@@ -428,6 +522,130 @@ function ReportsPage() {
               },
             ]}
           />
+        </div>
+      )}
+
+      {tab === "contractor-billing" && (
+        <div className="space-y-6">
+          {/* Filters */}
+          <Card className="shadow-lodge">
+            <CardHeader>
+              <CardTitle className="text-base">Billing Period & Filters</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-4">
+                <div className="grid gap-1 text-sm">
+                  <label className="font-medium">Start Date</label>
+                  <Input
+                    type="date"
+                    value={billingStartDate}
+                    onChange={(e) => setBillingStartDate(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-1 text-sm">
+                  <label className="font-medium">End Date</label>
+                  <Input
+                    type="date"
+                    value={billingEndDate}
+                    onChange={(e) => setBillingEndDate(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-1 text-sm">
+                  <label className="font-medium">Camp</label>
+                  <Select value={billingCampFilter} onValueChange={setBillingCampFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Camps" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Camps</SelectItem>
+                      {billingCamps.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-1 text-sm">
+                  <label className="font-medium">&nbsp;</label>
+                  <Button variant="outline" onClick={() => window.print()}>
+                    Print report
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Summary */}
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Stat
+              label="Total Billable Nights"
+              value={String(contractorBillingRows.reduce((sum, r) => sum + r.nights, 0))}
+            />
+            <Stat
+              label="Contractors Billed"
+              value={String(new Set(contractorBillingRows.map((r) => r.contractor_name)).size)}
+            />
+            <Stat label="Period Total" value={`$${contractorBillingTotal.toFixed(2)}`} />
+          </div>
+
+          {/* Billing Table */}
+          <Card className="shadow-lodge">
+            <CardHeader>
+              <CardTitle className="text-base">
+                Contractor Accommodation Billing
+                {billingStartDate && billingEndDate && (
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">
+                    ({billingStartDate} to {billingEndDate})
+                  </span>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {contractorBillingRows.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No contractor allocations found for the selected period.
+                </p>
+              ) : (
+                <>
+                  <DataTable
+                    rows={contractorBillingRows}
+                    columns={[
+                      { key: "contractor_name", label: "Contractor" },
+                      { key: "camp_name", label: "Camp" },
+                      { key: "room_number", label: "Tent" },
+                      { key: "arrival_date", label: "Check-In" },
+                      { key: "departure_date", label: "Check-Out" },
+                      { key: "nights", label: "Nights" },
+                      {
+                        key: "rate_per_night",
+                        label: "Rate/Night",
+                        render: (r) => `$${r.rate_per_night.toFixed(2)}`,
+                      },
+                      {
+                        key: "line_total",
+                        label: "Total",
+                        render: (r) => `$${r.line_total.toFixed(2)}`,
+                      },
+                    ]}
+                  />
+                  <div className="mt-6 border-t pt-4">
+                    <div className="flex justify-end">
+                      <div className="w-64">
+                        <div className="flex justify-between mb-2 font-medium">
+                          <span>Period Total:</span>
+                          <span>${contractorBillingTotal.toFixed(2)}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Forward to client for settlement at month-end.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
