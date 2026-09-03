@@ -133,6 +133,7 @@ export type Database = {
           description: string | null;
           id: string;
           location: string | null;
+          map_image_path: string | null;
           name: string;
           status: string;
           updated_at: string;
@@ -144,6 +145,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           location?: string | null;
+          map_image_path?: string | null;
           name: string;
           status?: string;
           updated_at?: string;
@@ -155,6 +157,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           location?: string | null;
+          map_image_path?: string | null;
           name?: string;
           status?: string;
           updated_at?: string;
@@ -449,6 +452,8 @@ export type Database = {
           deleted_at: string | null;
           id: string;
           maintenance_notes: string | null;
+          map_x: number | null;
+          map_y: number | null;
           max_occupancy: number;
           room_number: string;
           room_type_id: string | null;
@@ -462,6 +467,8 @@ export type Database = {
           deleted_at?: string | null;
           id?: string;
           maintenance_notes?: string | null;
+          map_x?: number | null;
+          map_y?: number | null;
           max_occupancy?: number;
           room_number: string;
           room_type_id?: string | null;
@@ -475,6 +482,8 @@ export type Database = {
           deleted_at?: string | null;
           id?: string;
           maintenance_notes?: string | null;
+          map_x?: number | null;
+          map_y?: number | null;
           max_occupancy?: number;
           room_number?: string;
           room_type_id?: string | null;

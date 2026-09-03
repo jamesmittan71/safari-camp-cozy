@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAllocationsRouteImport } from './routes/_authenticated/allocations'
 import { Route as AuthenticatedBuildingsRouteImport } from './routes/_authenticated/buildings'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
+import { Route as AuthenticatedCampMapRouteImport } from './routes/_authenticated/camp-map'
 import { Route as AuthenticatedCampsRouteImport } from './routes/_authenticated/camps'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedHousekeepingRouteImport } from './routes/_authenticated/housekeeping'
@@ -52,6 +53,11 @@ const AuthenticatedBuildingsRoute = AuthenticatedBuildingsRouteImport.update({
 const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCampMapRoute = AuthenticatedCampMapRouteImport.update({
+  id: '/camp-map',
+  path: '/camp-map',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCampsRoute = AuthenticatedCampsRouteImport.update({
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/allocations': typeof AuthenticatedAllocationsRoute
   '/buildings': typeof AuthenticatedBuildingsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
+  '/camp-map': typeof AuthenticatedCampMapRoute
   '/camps': typeof AuthenticatedCampsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/housekeeping': typeof AuthenticatedHousekeepingRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/allocations': typeof AuthenticatedAllocationsRoute
   '/buildings': typeof AuthenticatedBuildingsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
+  '/camp-map': typeof AuthenticatedCampMapRoute
   '/camps': typeof AuthenticatedCampsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/housekeeping': typeof AuthenticatedHousekeepingRoute
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   '/_authenticated/allocations': typeof AuthenticatedAllocationsRoute
   '/_authenticated/buildings': typeof AuthenticatedBuildingsRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
+  '/_authenticated/camp-map': typeof AuthenticatedCampMapRoute
   '/_authenticated/camps': typeof AuthenticatedCampsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/housekeeping': typeof AuthenticatedHousekeepingRoute
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/allocations'
     | '/buildings'
     | '/calendar'
+    | '/camp-map'
     | '/camps'
     | '/dashboard'
     | '/housekeeping'
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/allocations'
     | '/buildings'
     | '/calendar'
+    | '/camp-map'
     | '/camps'
     | '/dashboard'
     | '/housekeeping'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/_authenticated/allocations'
     | '/_authenticated/buildings'
     | '/_authenticated/calendar'
+    | '/_authenticated/camp-map'
     | '/_authenticated/camps'
     | '/_authenticated/dashboard'
     | '/_authenticated/housekeeping'
@@ -241,6 +253,13 @@ declare module '@tanstack/react-router' {
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof AuthenticatedCalendarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/camp-map': {
+      id: '/_authenticated/camp-map'
+      path: '/camp-map'
+      fullPath: '/camp-map'
+      preLoaderRoute: typeof AuthenticatedCampMapRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/camps': {
@@ -306,6 +325,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAllocationsRoute: typeof AuthenticatedAllocationsRoute
   AuthenticatedBuildingsRoute: typeof AuthenticatedBuildingsRoute
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
+  AuthenticatedCampMapRoute: typeof AuthenticatedCampMapRoute
   AuthenticatedCampsRoute: typeof AuthenticatedCampsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedHousekeepingRoute: typeof AuthenticatedHousekeepingRoute
@@ -320,6 +340,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAllocationsRoute: AuthenticatedAllocationsRoute,
   AuthenticatedBuildingsRoute: AuthenticatedBuildingsRoute,
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
+  AuthenticatedCampMapRoute: AuthenticatedCampMapRoute,
   AuthenticatedCampsRoute: AuthenticatedCampsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedHousekeepingRoute: AuthenticatedHousekeepingRoute,

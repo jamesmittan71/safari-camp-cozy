@@ -9,6 +9,7 @@ import {
   FileBarChart,
   LayoutDashboard,
   LogOut,
+  MapPinned,
   Menu,
   Sparkles,
   Tent,
@@ -26,6 +27,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/camps", label: "Camps", icon: Tent },
+  { to: "/camp-map", label: "Camp Map", icon: MapPinned },
   { to: "/buildings", label: "Buildings", icon: Building2 },
   { to: "/rooms", label: "Rooms", icon: BedDouble },
   { to: "/allocations", label: "Allocations", icon: ClipboardList },

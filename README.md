@@ -22,6 +22,10 @@ Public sign-up and public OAuth registration are intentionally absent from the U
 
 Create a Supabase Storage bucket named `room-setup` manually before using room reference photos. Authenticated users need read access; administrators and managers need write access. The `rooms.setup_image_url` column stores the full public or signed URL for the image.
 
+## Camp Status Maps
+
+Create a **public** Supabase Storage bucket named `camp-maps` in Storage > New bucket. The map uses the bucket's public URL, so do not make it private. In Storage > Policies, add an `INSERT` policy on `storage.objects` for authenticated users with `bucket_id = 'camp-maps' AND public.can_manage(auth.uid())`; this restricts uploads and replacements to administrators and managers. No delete policy is needed: clearing a camp map only sets `camps.map_image_path` to `NULL` and does not remove a storage object, room, or marker coordinate.
+
 ## Development
 
 Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).

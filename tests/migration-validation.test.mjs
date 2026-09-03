@@ -7,5 +7,5 @@ test("migration validation accepts the canonical append-only chain", () => {
     encoding: "utf8",
   });
 
-  assert.match(output, /Validated 10 append-only migrations/);
+  assert.match(output, /Validated 11 append-only migrations/);
 });

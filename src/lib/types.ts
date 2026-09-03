@@ -5,6 +5,7 @@ export type CampRow = {
   location: string | null;
   description: string | null;
   status: string;
+  map_image_path: string | null;
 };
 
 export type BuildingRow = {
@@ -34,7 +35,9 @@ export type RoomRow = {
   status: string;
   maintenance_notes: string | null;
   setup_image_url: string | null;
-  buildings?: { name: string; camps?: { name: string } | null } | null;
+  map_x: number | null;
+  map_y: number | null;
+  buildings?: { camp_id?: string; name: string; camps?: { name: string } | null } | null;
   room_types?: { name: string } | null;
 };
 
