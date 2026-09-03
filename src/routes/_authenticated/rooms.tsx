@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/AppShell";
 import { RecordDialog, type RecordValues } from "@/components/RecordDialog";
@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ROOM_STATUS,
   isActiveOn,
@@ -68,6 +69,14 @@ export const Route = createFileRoute("/_authenticated/rooms")({
 
 type ComputedStatus = "maintenance" | "dirty" | "occupied" | "available";
 
+const OPEN_MAINT = new Set([
+  "reported",
+  "assigned",
+  "in_progress",
+  "waiting_for_parts",
+  "inspection",
+]);
+
 type HistoryInput = {
   allocation_id?: string | null;
   staff_id?: string | null;
@@ -98,8 +107,7 @@ function computeStatus(
   hasActiveAllocation: boolean,
 ): ComputedStatus {
   const hasMaintenance = maintenance.some(
-    (report) =>
-      report.room_id === room.id && (report.status === "open" || report.status === "in_progress"),
+    (report) => report.room_id === room.id && OPEN_MAINT.has(report.status),
   );
   if (hasMaintenance) return "maintenance";
 
@@ -186,7 +194,7 @@ function RoomsPage() {
   const maintenanceByRoomId = useMemo(() => {
     const map = new Map<string, MaintenanceRow[]>();
     for (const report of maintenanceReports) {
-      if (report.status !== "open" && report.status !== "in_progress") continue;
+      if (!OPEN_MAINT.has(report.status)) continue;
       const bucket = map.get(report.room_id) ?? [];
       bucket.push(report);
       map.set(report.room_id, bucket);
@@ -614,6 +622,12 @@ function RoomsPage() {
           { name: "max_occupancy", label: "Maximum occupancy", type: "number" },
           { name: "status", label: "Status", type: "select", options: ROOM_STATUS },
           { name: "maintenance_notes", label: "Maintenance notes", type: "textarea" },
+          {
+            name: "setup_image_url",
+            label: "Setup reference image URL",
+            type: "text",
+            placeholder: "https://example.com/image.jpg or Supabase Storage URL",
+          },
         ]}
         onSubmit={(values) =>
           saveRoom.mutate(
@@ -626,8 +640,27 @@ function RoomsPage() {
               max_occupancy: Number(values.max_occupancy ?? 2) || 2,
               status: values.status ?? "available",
               maintenance_notes: values.maintenance_notes,
+              setup_image_url: values.setup_image_url ?? null,
             },
-            { onSuccess: () => setRoomOpen(false) },
+            {
+              onSuccess: async () => {
+                setRoomOpen(false);
+                if (!user?.id) return;
+                const action = values.id ? "updated" : "created";
+                await supabase.from("activity_log").insert({
+                  entity_type: "room",
+                  entity_id: values.id,
+                  action,
+                  actor_user_id: user.id,
+                  actor_name: fullName ?? "Unknown",
+                  summary: `Tent ${values.room_number} ${action}`,
+                  details: {
+                    status: values.status ?? "available",
+                    setup_image_url: values.setup_image_url ?? null,
+                  },
+                });
+              },
+            },
           )
         }
       />
@@ -738,6 +771,15 @@ function TentCard({
 
   return (
     <Card className={cn("overflow-hidden shadow-lodge", STATUS_BORDER[computed])}>
+      {room.setup_image_url ? (
+        <div className="relative h-32 overflow-hidden bg-muted">
+          <img
+            src={room.setup_image_url}
+            alt={`Setup reference for ${room.room_number}`}
+            className="h-full w-full object-cover"
+          />
+        </div>
+      ) : null}
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -812,10 +854,13 @@ function TentCard({
         ) : null}
 
         {maint.length > 0 ? (
-          <div className="space-y-0.5 rounded-md bg-destructive/5 p-2 text-xs">
-            <p className="font-medium text-muted-foreground">Maintenance</p>
+          <div className="space-y-0.5 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs">
+            <div className="flex items-center gap-1 font-medium text-destructive">
+              <Wrench className="size-3.5" />
+              <span>Maintenance ({maint.length})</span>
+            </div>
             {maint.slice(0, 2).map((report) => (
-              <div key={report.id}>
+              <div key={report.id} className="text-muted-foreground">
                 <span className="font-medium">{report.description}</span>
                 {" · "}
                 <StatusBadge value={report.priority} />

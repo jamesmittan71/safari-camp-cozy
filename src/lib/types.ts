@@ -33,6 +33,7 @@ export type RoomRow = {
   max_occupancy: number;
   status: string;
   maintenance_notes: string | null;
+  setup_image_url: string | null;
   buildings?: { name: string; camps?: { name: string } | null } | null;
   room_types?: { name: string } | null;
 };
@@ -159,6 +160,18 @@ export type MaintenanceHistoryRow = {
   to_status: string;
   changed_by: string | null;
   notes: string | null;
+  created_at: string;
+};
+
+export type ActivityLogRow = {
+  id: string;
+  entity_type: string;
+  entity_id: string | null;
+  action: string;
+  actor_user_id: string | null;
+  actor_name: string | null;
+  summary: string;
+  details: Record<string, unknown> | null;
   created_at: string;
 };
 

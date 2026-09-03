@@ -619,6 +619,42 @@ export type Database = {
           },
         ];
       };
+      activity_log: {
+        Row: {
+          id: string;
+          entity_type: string;
+          entity_id: string | null;
+          action: string;
+          actor_user_id: string;
+          actor_name: string;
+          summary: string;
+          details: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          entity_type: string;
+          entity_id?: string | null;
+          action: string;
+          actor_user_id: string;
+          actor_name: string;
+          summary: string;
+          details?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          entity_type?: string;
+          entity_id?: string | null;
+          action?: string;
+          actor_user_id?: string;
+          actor_name?: string;
+          summary?: string;
+          details?: Json | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       user_roles: {
         Row: {
           created_at: string;

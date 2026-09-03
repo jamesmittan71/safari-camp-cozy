@@ -665,6 +665,71 @@ function Dashboard() {
         <KpiCard icon={Users} label="Staff Currently Allocated" value={allocatedStaffIds.size} />
       </section>
 
+      <section className="rounded-lg border border-border bg-card p-4 shadow-lodge sm:p-6">
+        <h2 className="mb-4 font-display text-lg font-bold">Today's Digest</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="space-y-1 rounded-md bg-muted/50 p-3">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Check-ins Today</p>
+            <div className="flex items-baseline gap-2">
+              <p className="font-display text-2xl">{arrivalsToday.length}</p>
+              <p className="text-xs text-muted-foreground">arrivals</p>
+            </div>
+            {arrivalsToday.length > 0 && (
+              <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                {arrivalsToday.slice(0, 3).map((a) => (
+                  <li key={a.id}>
+                    • {a.bed_a_name ?? a.bed_b_name ?? "Guest"} → Tent {a.rooms?.room_number ?? "?"}
+                  </li>
+                ))}
+                {arrivalsToday.length > 3 && <li>• +{arrivalsToday.length - 3} more</li>}
+              </ul>
+            )}
+          </div>
+
+          <div className="space-y-1 rounded-md bg-muted/50 p-3">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+              Check-outs Today
+            </p>
+            <div className="flex items-baseline gap-2">
+              <p className="font-display text-2xl">{departuresToday.length}</p>
+              <p className="text-xs text-muted-foreground">departures</p>
+            </div>
+            {departuresToday.length > 0 && (
+              <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                {departuresToday.slice(0, 3).map((a) => (
+                  <li key={a.id}>
+                    • {a.bed_a_name ?? a.bed_b_name ?? "Guest"} ← Tent {a.rooms?.room_number ?? "?"}
+                  </li>
+                ))}
+                {departuresToday.length > 3 && <li>• +{departuresToday.length - 3} more</li>}
+              </ul>
+            )}
+          </div>
+
+          <div className="space-y-1 rounded-md bg-muted/50 p-3">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Housekeeping</p>
+            <div className="flex items-baseline gap-2">
+              <p className="font-display text-2xl">{housekeepingCounts.dirty}</p>
+              <p className="text-xs text-muted-foreground">dirty tents</p>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {housekeepingCounts.cleaning} in progress · {housekeepingCounts.inspection} inspection
+            </p>
+          </div>
+
+          <div className="space-y-1 rounded-md bg-muted/50 p-3">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Maintenance</p>
+            <div className="flex items-baseline gap-2">
+              <p className="font-display text-2xl">{maintenanceCounts.open}</p>
+              <p className="text-xs text-muted-foreground">open WOs</p>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {maintenanceCounts.critical} critical · {maintenanceCounts.overdue} overdue
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <Card className="shadow-lodge">
           <CardHeader>

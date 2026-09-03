@@ -14,8 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/hooks/useAuth";
 import { isActiveOn, MAINT_STATUS, today, useList } from "@/lib/data";
 import type {
+  ActivityLogRow,
   AllocationRow,
   HousekeepingRow,
   MaintenanceRow,
@@ -50,6 +52,7 @@ const TABS = [
   { key: "weekly-movements", label: "Weekly Movements" },
   { key: "open-maintenance", label: "Open Maintenance" },
   { key: "contractor-billing", label: "Contractor Billing" },
+  { key: "activity", label: "Activity Log" },
 ];
 
 const OPEN_MAINTENANCE_STATUSES = new Set(
@@ -59,6 +62,7 @@ const OPEN_MAINTENANCE_STATUSES = new Set(
 );
 
 function ReportsPage() {
+  const { canManage } = useAuth();
   const [tab, setTab] = useState("occupancy");
   const day = today();
   const [reportDate, setReportDate] = useState(day);
@@ -75,6 +79,14 @@ function ReportsPage() {
   });
   const [billingEndDate, setBillingEndDate] = useState(day);
   const [billingCampFilter, setBillingCampFilter] = useState("all");
+  // Activity log filters
+  const [activityStartDate, setActivityStartDate] = useState(() => {
+    const d = new Date(day);
+    d.setDate(d.getDate() - 7);
+    return d.toISOString().slice(0, 10);
+  });
+  const [activityEndDate, setActivityEndDate] = useState(day);
+  const [activityEntityFilter, setActivityEntityFilter] = useState("all");
 
   const { data: rooms = [], error: roomsError } = useList<RoomRow>(
     "rooms",
@@ -99,12 +111,22 @@ function ReportsPage() {
     "*",
     "surname",
   );
+  const { data: activityLogs = [], error: activityError } = useList<ActivityLogRow>(
+    "activity_log",
+    "*",
+    "created_at",
+  );
 
   const active = useMemo(() => allocations.filter((a) => isActiveOn(a, day)), [allocations, day]);
   const occupiedIds = new Set(active.map((a) => a.room_id));
   const rate = rooms.length ? Math.round((occupiedIds.size / rooms.length) * 100) : 0;
   const queryError =
-    roomsError ?? allocationsError ?? cleaningError ?? maintenanceError ?? staffError;
+    roomsError ??
+    allocationsError ??
+    cleaningError ??
+    maintenanceError ??
+    staffError ??
+    activityError;
   const dailyGuests = useMemo(
     () => allocations.filter((allocation) => isActiveOn(allocation, reportDate)),
     [allocations, reportDate],
@@ -149,6 +171,20 @@ function ReportsPage() {
     ],
     [maintenance],
   );
+
+  const filteredActivityLogs = useMemo(() => {
+    return activityLogs.filter((log) => {
+      const logDate = log.created_at?.slice(0, 10);
+      if (logDate && (logDate < activityStartDate || logDate > activityEndDate)) return false;
+      if (activityEntityFilter !== "all" && log.entity_type !== activityEntityFilter) return false;
+      return true;
+    });
+  }, [activityLogs, activityStartDate, activityEndDate, activityEntityFilter]);
+
+  const activityEntityTypes = useMemo(() => {
+    const types = new Set(activityLogs.map((log) => log.entity_type));
+    return Array.from(types).sort();
+  }, [activityLogs]);
 
   // Contractor billing report data
   const contractorBillingRows = useMemo(() => {
@@ -648,6 +684,102 @@ function ReportsPage() {
           </Card>
         </div>
       )}
+
+      {tab === "activity" &&
+        (canManage ? (
+          <div className="space-y-4">
+            <Card className="shadow-lodge">
+              <CardHeader>
+                <CardTitle className="text-base">Activity Log</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Start Date</label>
+                    <Input
+                      type="date"
+                      value={activityStartDate}
+                      onChange={(e) => setActivityStartDate(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">End Date</label>
+                    <Input
+                      type="date"
+                      value={activityEndDate}
+                      onChange={(e) => setActivityEndDate(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Entity Type</label>
+                    <Select value={activityEntityFilter} onValueChange={setActivityEntityFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All types" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        <SelectItem value="all">All types</SelectItem>
+                        {activityEntityTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {filteredActivityLogs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No activity records found.</p>
+                ) : (
+                  <div className="overflow-x-auto rounded-md border text-sm">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b bg-muted/50 text-left text-xs text-muted-foreground">
+                          <th className="px-3 py-2">Date & Time</th>
+                          <th className="px-3 py-2">Entity Type</th>
+                          <th className="px-3 py-2">Action</th>
+                          <th className="px-3 py-2">Summary</th>
+                          <th className="px-3 py-2">Actor</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredActivityLogs
+                          .sort(
+                            (a, b) =>
+                              new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+                          )
+                          .slice(0, 200)
+                          .map((log) => (
+                            <tr key={log.id} className="border-b last:border-0">
+                              <td className="px-3 py-2 whitespace-nowrap text-xs">
+                                {new Date(log.created_at).toLocaleString()}
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap">
+                                <span className="inline-block rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                                  {log.entity_type}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap font-medium">
+                                {log.action}
+                              </td>
+                              <td className="px-3 py-2 text-muted-foreground">{log.summary}</td>
+                              <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
+                                {log.actor_name ?? "System"}
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-border bg-muted/30 p-6 text-center">
+            <p className="text-muted-foreground">Activity log access is restricted to managers.</p>
+          </div>
+        ))}
     </div>
   );
 }

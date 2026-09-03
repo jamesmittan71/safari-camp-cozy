@@ -74,7 +74,7 @@ function employmentLabel(status: string) {
 // ─── main page ───────────────────────────────────────────────────────────────
 
 function TeamPage() {
-  const { canManage, canOperate } = useAuth();
+  const { canManage, canOperate, user, session } = useAuth();
   const qc = useQueryClient();
   const day = today();
 
@@ -751,10 +751,34 @@ function TeamPage() {
               notes: values.notes,
             },
             {
-              onSuccess: () => {
+              onSuccess: async () => {
                 setEditOpen(false);
                 if (selectedMember && values.id === selectedMember.id) {
                   // refresh selected member data via query invalidation (already done by useSave)
+                }
+                if (!user?.id) return;
+                const wasContractorChanged =
+                  (values.is_contractor === true || values.is_contractor === "true") !==
+                  selectedMember?.is_contractor;
+                const wasRateChanged =
+                  values.accommodation_rate !== selectedMember?.accommodation_rate;
+                if (wasContractorChanged || wasRateChanged) {
+                  const action = values.id ? "updated" : "created";
+                  const fullName = session?.user?.user_metadata?.["full_name"] ?? "Unknown";
+                  await supabase.from("activity_log").insert({
+                    entity_type: "team_member",
+                    entity_id: values.id,
+                    action,
+                    actor_user_id: user.id,
+                    actor_name: fullName,
+                    summary: `${values.name} ${values.surname}: Contractor status or rate ${action}`,
+                    details: {
+                      name: `${values.name} ${values.surname}`,
+                      is_contractor:
+                        values.is_contractor === true || values.is_contractor === "true",
+                      accommodation_rate: values.accommodation_rate || null,
+                    },
+                  });
                 }
               },
             },

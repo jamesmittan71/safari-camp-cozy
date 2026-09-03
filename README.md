@@ -18,6 +18,10 @@ For Afrihost/cPanel, install production dependencies with npm, upload the built 
 
 Public sign-up and public OAuth registration are intentionally absent from the UI. Disable public sign-up in the Supabase dashboard before production; that dashboard change is a required manual deployment prerequisite.
 
+## Room Setup Images
+
+Create a Supabase Storage bucket named `room-setup` manually before using room reference photos. Authenticated users need read access; administrators and managers need write access. The `rooms.setup_image_url` column stores the full public or signed URL for the image.
+
 ## Development
 
 Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).

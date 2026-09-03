@@ -16,7 +16,8 @@ export type Tbl =
   | "maintenance_history"
   | "profiles"
   | "user_roles"
-  | "staff_allocation_history";
+  | "staff_allocation_history"
+  | "activity_log";
 
 type ListOptions = {
   refetchInterval?: number;

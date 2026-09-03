@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import {
   MAINT_CATEGORIES,
   MAINT_STATUS,
@@ -93,7 +94,7 @@ function Stat({
 }
 
 function MaintenancePage() {
-  const { canOperate } = useAuth();
+  const { canOperate, fullName, user } = useAuth();
   const {
     data: reports = [],
     isLoading,
@@ -539,7 +540,30 @@ function MaintenancePage() {
               description: values.description,
               completion_notes: values.completion_notes ?? null,
             },
-            { onSuccess: () => setOpen(false) },
+            {
+              onSuccess: async () => {
+                setOpen(false);
+                if (!user?.id) return;
+                const existingReport = reports.find((report) => report.id === values.id);
+                const status = values.status ?? "reported";
+                const action = values.id ? "updated" : "created";
+                await supabase.from("activity_log").insert({
+                  entity_type: "maintenance",
+                  entity_id: values.id,
+                  action,
+                  actor_user_id: user.id,
+                  actor_name: fullName ?? "Unknown",
+                  summary: existingReport
+                    ? `Work order status changed from ${existingReport.status} to ${status}`
+                    : `Work order created with status ${status}`,
+                  details: {
+                    room_id: values.room_id,
+                    priority: values.priority ?? "normal",
+                    status,
+                  },
+                });
+              },
+            },
           )
         }
       />

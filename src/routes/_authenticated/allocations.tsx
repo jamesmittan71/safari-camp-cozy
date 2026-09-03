@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { isActiveOn, today, useList, useSave, useSoftDelete } from "@/lib/data";
 import type { AllocationRow, RoomRow, TeamMemberRow } from "@/lib/types";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/allocations")({
   head: () => ({
@@ -32,7 +33,8 @@ export const Route = createFileRoute("/_authenticated/allocations")({
 });
 
 function AllocationsPage() {
-  const { canOperate } = useAuth();
+  const { canOperate, user, session } = useAuth();
+  const db = supabase;
   const { data: allocations = [], isLoading } = useList<AllocationRow>(
     "allocations",
     "*, rooms(room_number, buildings(name, camps(name)))",
@@ -319,7 +321,27 @@ function AllocationsPage() {
               comments: values.comments,
               status: values.status ?? "booked",
             },
-            { onSuccess: () => setOpen(false) },
+            {
+              onSuccess: async () => {
+                setOpen(false);
+                if (!user?.id) return;
+                const action = values.id ? "updated" : "created";
+                const fullName = session?.user?.user_metadata?.["full_name"] ?? "Unknown";
+                await supabase.from("activity_log").insert({
+                  entity_type: "allocation",
+                  entity_id: values.id,
+                  action,
+                  actor_user_id: user.id,
+                  actor_name: fullName,
+                  summary: `Allocation ${action}: Tent ${values.room_id}`,
+                  details: {
+                    bed_a_name: values.bed_a_name,
+                    bed_b_name: values.bed_b_name,
+                    departure: values.departure_date,
+                  },
+                });
+              },
+            },
           );
         }}
       />
